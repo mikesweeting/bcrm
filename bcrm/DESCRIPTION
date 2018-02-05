@@ -20,3 +20,5 @@ Suggests:
     BRugs,
     rjags
 RoxygenNote: 6.0.1
+URL: https://github.com/mikesweeting/bcrm
+BugReports: https://github.com/mikesweeting/bcrm/issues
