@@ -1,0 +1,21 @@
+citHeader("To cite bcrm in publications use:")
+
+citEntry(entry = "Article",
+  title        = "{bcrm}: Bayesian Continual Reassessment Method Designs for Phase I Dose-Finding Trials",
+  author       = personList(as.person("Michael Sweeting"),
+                   as.person("Adrian Mander"),
+                   as.person("Tony Sabin")),
+  journal      = "Journal of Statistical Software",
+  year         = "2013",
+  volume       = "54",
+  number       = "13",
+  pages        = "1--26",
+  url          = "http://www.jstatsoft.org/article/view/v054i13",
+
+  textVersion  =
+  paste("Michael Sweeting, Adrian Mander, Tony Sabin (2013).",
+        "bcrm: Bayesian Continual Reassessment Method Designs for Phase I Dose-Finding Trials.",
+        "Journal of Statistical Software, 54(13), 1-26.",
+        "URL http://www.jstatsoft.org/article/view/v054i13")
+)
+

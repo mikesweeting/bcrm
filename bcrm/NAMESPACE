@@ -1,0 +1,30 @@
+export(
+bcrm,
+Posterior.exact,
+Posterior.BRugs,
+Posterior.R2WinBUGS,
+Posterior.rjags,
+getprior,
+find.x,
+threep3
+)
+
+import(
+ggplot2,
+mvtnorm
+)
+
+importFrom("grid","grid.newpage","pushViewport","viewport","grid.layout")
+importFrom("grDevices", "dev.off", "pdf")
+importFrom("graphics", "hist", "lines", "par", "plot")
+importFrom("stats", "dbinom", "dgamma", "dlnorm", "dunif", "integrate",
+     "median", "optimize", "qlogis", "quantile", "rbinom",
+     "rgamma", "rlnorm", "runif", "update", "weighted.mean",
+     "xtabs")
+
+S3method(print, bcrm)
+S3method(print,bcrm.sim)
+S3method(print,threep3)
+S3method(plot, bcrm)
+S3method(plot, bcrm.sim)
+S3method(plot,threep3)

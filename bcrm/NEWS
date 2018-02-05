@@ -1,0 +1,78 @@
+Version 0.4.8 (ADD NEW DATE)
+-------------
+* ALLOW EXACT TO WORK WITH QUANTILES
+* TO DO. UPDATE MANUAL TO SHOW HOW YOU CAN RETURN RECOMMENDED DOSE WITHOUT INTERACTIVE PROMPT BY SPECIFYING SIZE OF TRIAL AS MAXIMUM THAT YOU CURRENTLY HAVE - OR THINK OF A BETTER WAY TO DO THIS.
+* TO DO. CHANGE PRINT.BCRM.SIM FUNCTION SO THAT OVERALL EXPERIMENTATION PERCENTAGES ARE CALCULATED OVER ALL TRIALS COMBINED. THIS EFFECTS SIMULATIONS WHERE THERE ARE DIFFERENT SIZED TRIALS (I.E. DUE TO STOPPING RULES BEING IMPOSED). THANKS TO ELIEZER WEILL FOR SPOTTING THIS
+* INVESTIGATE STARTING VALUES IN POSTERIOR.RJAGS. DOES IT MATTER THAT THEY START AT c(-3,0) OR WOULD PRIOR MEANS HAVE BEEN BETTER?
+
+
+Version 0.4.7 (28th January 2018)
+-------------
+* threep3 now works with any starting dose, not just the first. Thanks to Bernard North and Christina Yassouridis for spotting this bug.
+* A safety stopping rule has now been implemented with stop(list(safety=p)) following the approach of Zohar and Chevret, Statistics in Medicine (2001)
+* Updated bcrm help page. p.tox0 are the skeleton probabilities, not the standardised doses. Thanks to Eliezer Weill for spotting this.
+* Using geom_bar to obtain percentage of subjects with DLTs since weight option removed from geom_hist
+* threep3 example in manual corrected with named arguments
+
+
+Version 0.4.6 (20th November 2015)
+-------------
+* Plotting functions updated to work with latest version of ggplot2 (>= 1.0.1)
+* Argument "quietly" has been added to allow user to suppress simulation number output when running bcrm.
+* print.bcrm.sim now returns a matrix of experimented dose proportions and a vector of recommended doses
+
+
+Version 0.4.5 (23rd September 2015)
+-------------
+* The threep3 command also now returns all possible desigin in an object labelled `all.designs' for the user to interrogate further if required
+* The threep3 command now also returns the average number of patients per dose level and the average number of DLTs per dose level
+* Designs that use toxicity intervals now return the posterior probability of lying in each interval in the print.bcrm output
+* seed argument added to allow reproducibility of results
+* The help files for bcrm and getprior incorrectly specified the parameter `b' as the standard deviation of the lognormal prior. It is actually the variance. Many thanks to Elaidi Reza for spotting this error
+* DESCRIPTION file details changed
+
+Version 0.4.4 (18th March 2014)
+-------------
+* Maintainer contact details changed
+
+Version 0.4.3 (10th September 2013)
+-------------
+* rjags can now be used instead of R2WinBUGS or BRugs
+* Allows the 3+3 design to start at any dose level (a modified 3+3)
+* Includes citation information for Journal of Statistical Software publication
+
+Version 0.4.2 (19th March 2013)
+-------------
+* Corrects bug in simulation studies that do not use exact.sim computation, whereby an error is returned if more than 100 simulations are performed.
+* Restricts bcrm and Posterior.BRugs examples to Windows and Linux Operating Systems where method="BRugs" is used. Hence Mac version should now compile on CRAN.
+
+Version 0.4.1 (24th October 2012)
+-------------
+* New data argument allows specification of doses and toxicities of all previously recruited patients, and the sequential order in which they were entered into the trial. Arguments tox and notox in bcrm are now deprecated.
+* The dose trajectory and observed toxicities from a single trial can now be plotted using the argument trajectory = TRUE inside plot.bcrm
+
+Version 0.4 (18th September 2012)
+-------------
+* Simulations now allow the chosen Bayesian design to be compared alongside a traditional 3+3 algorithmic design.
+* Corrects an error where simulation trajectories were not being plotted when specifying the argument trajectories = TRUE inside plot.bcrm.sim
+
+Version 0.3 (1st May 2012)
+-------------
+* Stores posterior summaries after each step of an escalation, if a trial is conducted interactivey. These summaries are now returned in the "ndose" componenet of the bcrm object. The component "alpha" is now redundant and has been removed.
+* Stopping rules have been added, allowing stopping to be based on a maximum sample size, the maximum number to be treated at the final MTD estimate, the precision of the MTD estimate, and a minumum sample size.
+* Posterior summaries after each recruited cohort can now be plotted using the "each" argument of plot.bcrm.
+* When simulating, operating characteristics are also now presented by true regions of toxicity risk.
+* Initial search space for posterior quantiles limited to a grid of size 100
+* Simulations now run faster, as they use information from identical previous simulations to choose next dose. This is only implemented if nsims<=1000, otherwise the computation time to search previous simulations becomes unmanageable.
+* Plot and print commands now refer to actual dose labels when they have been given by the user
+* Output from simulations can now be plotted as histograms using the function plot.bcrm.sim
+
+Version 0.2 (9th February 2012)
+-------------
+* Implementation of escalation based on posterior toxicity intervals using loss functions, as described in Neuenschwander et al, 2008.
+* Fixed bug where posterior quantiles are occasionally incorrectly calculated using method="exact". This occurred because the space in which optimize searched for the quantile was sometimes too large and optimize did not find the correct minimum. The new release chooses the interval in which to search based on a preliminary grid search.
+* Fixed problem with `file' argument, where only the last of the two plots was saved.
+
+Version 0.1 (11th January 2012)
+-------------
+* First release. 

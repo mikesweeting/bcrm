@@ -1,0 +1,43 @@
+\name{print.threep3}
+\alias{print.threep3}
+\title{
+Print information regarding the operating characteristics of a standard 3+3 design
+}
+\description{
+Print method for a 3+3 design specified using a \code{\link{threep3}}. 
+}
+\usage{
+\method{print}{threep3}(x, tox.cutpoints = NULL, dose = NULL, \ldots)
+}
+\arguments{
+  \item{x}{
+An object of class "threep3" as returned by \code{\link{threep3}}
+}
+ \item{tox.cutpoints}{
+An optional argument passed to \code{print.threep3} specifying the cutpoints of toxicity for which the operating characteristics are to be categorised. Defaults to \code{seq(from=0,to=1,by=0.2)}
+}
+ \item{dose}{Optional vector of length \code{k} of actual doses for presentation purposes
+}
+ \item{...}{Further arguments passed to or from other methods}
+}
+\details{
+The following operating characteristics are printed for the standard 3+3 design:
+\describe{
+	\item{Sample size}{Mean, minimum and maximum sample size of the design}
+	\item{Experimentation proportion}{Proportion of patients recruited to each dose, and to each true region of toxicity, on average}
+	\item{Recommendation proportion}{Proportion of 3+3 trials that would recommend each of the dose levels as the final maximum tolerated dose (see \code{\link{threep3}} for definition of the MTD), and the associated regions of true toxicity for the recommended MTDs}
+	\item{Average number of patients}{The average number of patients dosed at each level}
+	\item{Average number of DLTs}{The average number of DLTs seen at each level}
+}
+}
+
+
+\author{
+Michael Sweeting \email{mjs212@medschl.cam.ac.uk} (University of Cambridge, UK)
+}
+\references{
+ Sweeting M., Mander A., Sabin T. \pkg{bcrm}: Bayesian Continual Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal of Statistical Software} (2013) 54: 1--26. \url{http://www.jstatsoft.org/article/view/v054i13}
+}
+\seealso{
+\code{\link{threep3}}
+}
