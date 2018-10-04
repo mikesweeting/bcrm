@@ -1,7 +1,7 @@
 ## Bayesian CRM - extending original code of J. Jack Lee and Nan Chen, Department of Biostatistics, the University of Texas M. D. Anderson Cancer Center
 ## Now using exact inference, rjags, R2WinBUGS or BRugs 
 
-### MJS 03/07/17
+### MJS 04/10/18
 
 if(getRversion() >= "2.15.1") globalVariables(c("N1","pow","d","alpha","p2","logit<-","log.alpha","inverse","patient","toxicity","est","target.tox","q2.5","q97.5","q50","q25","q75","ndose","tox.cutpoints","xmin","ymin","xmax","ymax","Loss","Outcome","traj","Statistic","..density..","Toxicity","weight","Method","..count..","rec","obs","obs.rounded","count","n"))
 
@@ -224,12 +224,16 @@ bcrm<-function(stop=list(nmax=NULL,nmtd=NULL,precision=NULL,nmin=NULL,safety=NUL
 			if(!simulate){
 				interact<-crm.interactive(new.tox,new.notox,ncurrent,cohort,ndose,dose)
 				if(interact$bk==TRUE){
-					results$data<-newdata
+				  results$tox<-new.tox
+				  results$notox<-new.notox
+				  results$ndose[[length(results$ndose)+1]]<-ndose
+				  results$data<-newdata
 					return(results)
 				}
 				y<-interact$y
 				new.tox<-interact$tox
 				new.notox<-interact$notox
+				current<-interact$ans
 			} else {	
 				y<-rbinom(cohort,1,truep[ndose[[1]]]) 
 				new.notox[ndose[[1]]]<-new.notox[ndose[[1]]]+(cohort-sum(y))
@@ -330,49 +334,52 @@ bcrm<-function(stop=list(nmax=NULL,nmtd=NULL,precision=NULL,nmin=NULL,safety=NUL
 crm.interactive<-function(tox,notox,ncurrent,cohort,ndose,dose){
      k <- length(tox)
 		repeat {
-			  if(is.null(dose)){
-	     		  cat("\n\n RECOMMENDED DOSE LEVEL FOR PATIENTS ",ncurrent-cohort+1," to ",ncurrent, "IS:", ndose[[1]])
-		            ans <- get.dose.level(k,ncurrent,cohort)     
-			  } else {
-			  	  cat("\n\n RECOMMENDED DOSE FOR PATIENTS ",ncurrent-cohort+1," to ",ncurrent, "IS:", dose[ndose[[1]]])
-		            ans <- get.dose(dose,ncurrent,cohort)     
-			  }
-     	       if (ans==-2)
-          	      ans <- ifelse(is.null(dose),ndose[[1]],dose[ndose[[1]]])
-	            if (ans==0) {
-				  cat("\n\n EXIT AND RETURN THE RESULTS SO FAR?")            
-     	           cat("\n DO YOU REALLY WANT TO EXIT ? (Y/N)  ")
-          	      yn <- readline()
-              	 	 if (yn=="y" || yn=="Y") break
-              		  else                    next
-	     		 }  
-			# y.j is toxicity information from the treatment of patient j in the current
-		     # cohort of patients at dose level ndose
-			y<-vector()
-			cat("\n")
-			for(j in (ncurrent-cohort+1):ncurrent){
-	     		cat("ENTER TOXICITY DATA FOR PATIENT",j,"(1=TOX, 0=NO TOX): ")
-			     y <- c(y,get.answer())               
-			}
-     		# give the user a last chance to modify the treatment and outcome
-		     cat("\n\n\t\t ENTERED VALUES:")
-			if(is.null(dose)){
-	     		cat("\n DOSE LEVEL ...", ans)
-			} else {
-				cat("\n DOSE ...", ans)
-			}
-	     	cat("\n TOXICITIES ....",y)
-	     	cat("\n PRESS `RETURN' IF OK, OR ANY OTHER KEY TO ENTER NEW VALUES ")
-		     key <- readline()
-     		if (nchar(key)==0) break
+		  # y.j is toxicity information from the treatment of patient j in the current
+		  # cohort of patients at dose level ndose
+		  y<-vector()
+		  
+		  if(is.null(dose)){
+		    cat("\n\n RECOMMENDED DOSE LEVEL FOR PATIENTS ",ncurrent-cohort+1," to ",ncurrent, "IS:", ndose[[1]])
+		    ans <- get.dose.level(k,ncurrent,cohort)     
+		  } else {
+		    cat("\n\n RECOMMENDED DOSE FOR PATIENTS ",ncurrent-cohort+1," to ",ncurrent, "IS:", dose[ndose[[1]]])
+		    ans <- get.dose(dose,ncurrent,cohort)     
+		  }
+		  if (ans==-2)
+		    ans <- ifelse(is.null(dose),ndose[[1]],dose[ndose[[1]]])
+		  if (ans==0) {
+		    cat("\n\n EXIT AND RETURN THE RESULTS SO FAR?")            
+		    cat("\n DO YOU REALLY WANT TO EXIT ? (Y/N)  ")
+		    yn <- readline()
+		    if (yn=="y" || yn=="Y") break
+		    else                    next
+		  }  
+		  
+		  cat("\n")
+		  for(j in (ncurrent-cohort+1):ncurrent){
+		    cat("ENTER TOXICITY DATA FOR PATIENT",j,"(1=TOX, 0=NO TOX): ")
+		    y <- c(y,get.answer())               
+		  }
+		  # give the user a last chance to modify the treatment and outcome
+		  cat("\n\n\t\t ENTERED VALUES:")
+		  if(is.null(dose)){
+		    cat("\n DOSE LEVEL ...", ans)
+		  } else {
+		    cat("\n DOSE ...", ans)
+		  }
+		  cat("\n TOXICITIES ....",y)
+		  cat("\n PRESS `RETURN' IF OK, OR ANY OTHER KEY TO ENTER NEW VALUES ")
+		  key <- readline()
+		  if (nchar(key)==0) break
 		}
-          if (ans==0)  return(list(bk=TRUE))
-		if(!is.null(dose)){
-			ans<-which(dose==ans)
-		}
-		notox[ans]<-notox[ans]+(cohort-sum(y))
-		tox[ans]<-tox[ans]+sum(y)
-		return(list(tox=tox,notox=notox,y=y,bk=FALSE))
+     if (ans==0)  
+       return(list(tox=tox, notox=notox, y=y, bk=TRUE, ans=ans))
+     if(!is.null(dose)){
+       ans<-which(dose==ans)
+     }
+     notox[ans]<-notox[ans]+(cohort-sum(y))
+     tox[ans]<-tox[ans]+sum(y)
+     return(list(tox=tox, notox=notox, y=y, bk=FALSE, ans=ans))
 }
 
 
