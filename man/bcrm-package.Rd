@@ -11,8 +11,8 @@ Implements a wide variety of Bayesian CRM designs. The program can run interacti
 \tabular{ll}{
 Package: \tab bcrm\cr
 Type: \tab Package\cr
-Version: \tab 0.4.7\cr
-Date: \tab 2015-01-28\cr
+Version: \tab 0.4.8\cr
+Date: \tab 2015-10-04\cr
 License: \tab GPL (>= 2) \cr
 LazyLoad: \tab yes\cr
 }
@@ -20,11 +20,11 @@ LazyLoad: \tab yes\cr
 
 }
 \author{
-Michael Sweeting \email{mjs212@medschl.cam.ac.uk}
+Michael Sweeting \email{michael.sweeting@leicester.ac.uk} 
 
-Graham Wheeler \email{graham.wheeler@mrc-bsu.cam.ac.uk}
+Graham Wheeler \email{graham.wheeler@ucl.ac.uk}
 
-Maintainer: Michael Sweeting \email{mjs212@medschl.cam.ac.uk}
+Maintainer: Graham Wheeler \email{graham.wheeler@ucl.ac.uk}
 }
 
 \references{

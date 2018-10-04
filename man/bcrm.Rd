@@ -193,7 +193,7 @@ An object of class "bcrm" is a list with the following components:
 \item{method}{The calculation method used}
 \item{pointest}{The summary estimate used to choose the next dose, see \code{pointest}}
 \item{prior.alpha}{Information about the prior used for \eqn{alpha}, see \code{prior.alpha}}
-\item{data}{A data frame with variables `patient', `dose' and `tox' listing the doses and outcomes of all patients in the trial}
+\item{data}{A data frame with variables `patient', `dose' and `tox' listing the dose levels and outcomes of all patients in the trial}
 
 An object of class "bcrm.sim" is a list of length \code{nsims}. Each component is itself a list with components similar to those obtained from a "bcrm" object. The print function, \code{\link{print.bcrm.sim}} should be used to obtain operating characteristics from the simulation.
 
@@ -225,7 +225,7 @@ One-parameter models are designed as working models only, and should not be used
 }
 
 \author{
-Michael Sweeting \email{mjs212@medschl.cam.ac.uk} (University of Cambridge, UK), drawing on code originally developed by J. Jack Lee and Nan Chen, Department of Biostatistics, the University of Texas M. D. Anderson Cancer Center
+Michael Sweeting \email{michael.sweeting@leicester.ac.uk} (University of Leicester, UK) and Graham Wheeler (graham.wheeler@ucl.ac.uk), drawing on code originally developed by J. Jack Lee and Nan Chen, Department of Biostatistics, the University of Texas M. D. Anderson Cancer Center
 }
 
 \seealso{
