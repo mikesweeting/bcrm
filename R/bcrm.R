@@ -224,9 +224,9 @@ bcrm<-function(stop=list(nmax=NULL,nmtd=NULL,precision=NULL,nmin=NULL,safety=NUL
 			if(!simulate){
 				interact<-crm.interactive(new.tox,new.notox,ncurrent,cohort,ndose,dose)
 				if(interact$bk==TRUE){
-				  results$tox<-new.tox
-				  results$notox<-new.notox
-				  results$ndose[[length(results$ndose)+1]]<-ndose
+				#  results$tox<-new.tox
+				#  results$notox<-new.notox
+				#  results$ndose[[length(results$ndose)+1]]<-ndose
 				  results$data<-newdata
 					return(results)
 				}
@@ -283,7 +283,7 @@ bcrm<-function(stop=list(nmax=NULL,nmtd=NULL,precision=NULL,nmin=NULL,safety=NUL
 			ndose<-stopped$ndose ## update ndose in case no doses are deemed safe
 			
 			
-		}
+		
 		
 		## Once stopped run following code
 		if(simulate & !quietly){
@@ -303,7 +303,7 @@ bcrm<-function(stop=list(nmax=NULL,nmtd=NULL,precision=NULL,nmin=NULL,safety=NUL
 		if(plot){
 		  plot(results,file)
 		}
-		
+		}
 		sim<-sim+1
 	}
 	if(simulate){
@@ -1148,9 +1148,9 @@ plot.bcrm<-function(x,file=NULL,each=FALSE,trajectory=FALSE,...){
 					geom_hline(aes(yintercept=target.tox),data=df,col=4,linetype=2)	+xlab(dose.label)+ylab("Probability of DLT")+ylim(0,1)+ggtitle("Posterior point estimates \n Diamond shows next recommended dose")+
 					geom_point(aes(x=dose,y=est),data=df[x$ndose[[length(x$ndose)]][[1]],],size=4,col=4,shape=9)
 				} else {
-					ggplot()+geom_errorbar(aes(x=dose,ymin=q2.5,ymax=q97.5),colour="red",data=df)+geom_pointrange(aes(x=dose,y=q50,ymin=q25,ymax=q75),data=df,fill="red")+
-					geom_hline(aes(yintercept=target.tox),data=df,col=4,linetype=2)+xlab(dose.label)+ylab("Probability of DLT")+ylim(0,1)+ggtitle("Posterior p(DLT) quantiles: 2.5%, 25%, 50%, 75%, 97.5% \n Diamond shows next recommended dose")+
-					geom_point(aes(x=dose,y=q50),data=df[x$ndose[[length(x$ndose)]][[1]],],size=4,col=4,shape=9)
+				  ggplot()+geom_errorbar(aes(x=dose,ymin=q2.5,ymax=q97.5),colour="red",data=df)+geom_pointrange(aes(x=dose,y=q50,ymin=q25,ymax=q75),data=df,fill="red", shape=3)+
+				    geom_hline(aes(yintercept=target.tox),data=df,col=4,linetype=2)+xlab(dose.label)+ylab("Probability of DLT")+ylim(0,1)+ggtitle("Posterior p(DLT) quantiles: 2.5%, 25%, 50%, 75%, 97.5% \nPoints = p(DLT) estimates; Diamond = recommended dose")+
+				    geom_point(aes(x=dose,y=est),data=df, size = 2)+geom_point(aes(x=dose,y=est),data=df[x$ndose[[length(x$ndose)]][[1]],],size=4,col=4,shape=9)
 				}
 			} else {
 				if(x$method %in% c("exact","exact.sim") & x$ff=="logit2"){
