@@ -8,7 +8,7 @@ Authors@R: as.person(c(
     "Graham Wheeler <graham.wheeler@ucl.ac.uk> [aut, cre]"
   ))
 Maintainer: Graham Wheeler <graham.wheeler@ucl.ac.uk>
-Description: Implements a wide variety of one and two-parameter Bayesian CRM
+Description: Implements a wide variety of one- and two-parameter Bayesian CRM
     designs. The program can run interactively, allowing the user to enter outcomes
     after each cohort has been recruited, or via simulation to assess operating
     characteristics.

@@ -1,6 +1,6 @@
 Version 0.4.9 (10th October 2018)
 -------------
-* bug corrected in interactive version of bcrm to ensure updating of plots when option "plot = TRUE" is specified.
+* Bug corrected in interactive version of bcrm to ensure updating of plots when option "plot = TRUE" is specified.
 * Installation procedure would fail if an old version of rlang was used. The package "rlang" is now Imported at installation.
 * In trial plots in interactive version of bcrm, previously only posterior median probabilities of DLT were shown as filled dots. The symbol for medians has been changed to black lines, and the user-specified estimate for the probability of DLT (plugin, mean) is shown as a filled point.
 
