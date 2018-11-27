@@ -283,26 +283,23 @@ bcrm<-function(stop=list(nmax=NULL,nmtd=NULL,precision=NULL,nmin=NULL,safety=NUL
 			ndose<-stopped$ndose ## update ndose in case no doses are deemed safe
 			
 			
-		
-		
+			if(!simulate){
+			  results$tox<-new.tox
+			  results$notox<-new.notox
+			  results$ndose[[length(results$ndose)+1]]<-ndose
+			  results$data<-newdata
+			} else{
+			  subset.results[[sim-sub.start]]$tox<-new.tox
+			  subset.results[[sim-sub.start]]$notox<-new.notox
+			  subset.results[[sim-sub.start]]$ndose[[length(subset.results[[sim-sub.start]]$ndose)+1]]<-ndose
+			  subset.results[[sim-sub.start]]$data<-newdata			}
+			if(plot){
+			  plot(results,file)
+			}
+		}
 		## Once stopped run following code
 		if(simulate & !quietly){
-			cat(sim,"\n")
-		}
-	
-		if(!simulate){
-		  results$tox<-new.tox
-		  results$notox<-new.notox
-		  results$ndose[[length(results$ndose)+1]]<-ndose
-		  results$data<-newdata
-		} else{
-		  subset.results[[sim-sub.start]]$tox<-new.tox
-		  subset.results[[sim-sub.start]]$notox<-new.notox
-		  subset.results[[sim-sub.start]]$ndose[[length(subset.results[[sim-sub.start]]$ndose)+1]]<-ndose
-		  subset.results[[sim-sub.start]]$data<-newdata			}
-		if(plot){
-		  plot(results,file)
-		}
+		  cat(sim,"\n")
 		}
 		sim<-sim+1
 	}
