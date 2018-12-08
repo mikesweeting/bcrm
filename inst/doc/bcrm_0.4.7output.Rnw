@@ -18,6 +18,15 @@
 \clearpage
 
 \section{Introduction}
+This document contains the output of running the examples in
+the bcrm help file, as installed from CRAN on 2018-12-08. The
+reason is to be able to compare future versions with the
+current CRAN version.
+
+Note that one of the examples (with the 3+3 design) failed to
+run through knitr and rmarkdown. Also, there is a final example
+which (on some runs) reveals a bug: there is a systematic
+change in the simulated trials after the 100th.
 
 
 <<run,  echo=TRUE>>=
@@ -57,7 +66,9 @@ Power.LN.bcrm <- bcrm(stop=list(nmax=18), data=data,
                       sdose.calculate="median", pointest="mean")
 print(Power.LN.bcrm)
 plot(Power.LN.bcrm)
+@
 
+<<second, echo=TRUE>>=
 ## Simulate 10 replicate trials of size 36 (cohort size 3) using this design 
 ## with constraint (i.e. no dose-skipping) and starting at lowest dose
 ## True probabilities of toxicity are set to pre-specified probabilities (p.tox0) 
@@ -70,7 +81,13 @@ Power.LN.bcrm.sim <- bcrm(stop=list(nmax=36), p.tox0=p.tox0,
                           truep=p.tox0)
 print(Power.LN.bcrm.sim)
 plot(Power.LN.bcrm.sim)
+@
 
+\textbf{Note that} in the following example, I set threep3=FALSE
+because otherwise it mysteriously never finishes executing when
+run through knitr or rmarkdown.
+
+<<third, echo=TRUE>>==
 ## Comparing this CRM design with the standard 3+3 design 
 ## (only considering the first 12 dose levels)
 Power.LN.bcrm.compare.sim <- bcrm(stop=list(nmax=36),
@@ -82,11 +99,15 @@ Power.LN.bcrm.compare.sim <- bcrm(stop=list(nmax=36),
                                   sdose.calculate="median",
                                   pointest="mean", start=1,
                                   simulate=TRUE, nsims=50,
-                                  truep=p.tox0[1:12], threep3=TRUE)
-print(Power.LN.bcrm.compare.sim, threep3=TRUE)
-plot(Power.LN.bcrm.compare.sim, threep3=TRUE)
+                                  truep=p.tox0[1:12], threep3=FALSE,
+                                  quietly=TRUE)
+#print(Power.LN.bcrm.compare.sim, threep3=TRUE)
+#plot(Power.LN.bcrm.compare.sim, threep3=TRUE)
+print(Power.LN.bcrm.compare.sim, threep3=FALSE)
+plot(Power.LN.bcrm.compare.sim, threep3=FALSE)
+@
 
-
+<<fourth, echo=TRUE>>==
 ## A 2-parameter model,  using priors as specified in Neuenschwander et al 2008.
 ## Posterior mean used to choose the next dose
 ## Standardised doses using reference dose,  250mg
@@ -104,7 +125,9 @@ TwoPLogistic.mean.bcrm <- bcrm(stop=list(nmax=18), data=data,
                                pointest="mean", method="rjags")
 print(TwoPLogistic.mean.bcrm)
 plot(TwoPLogistic.mean.bcrm)
+@
 
+<<fifth, echo=TRUE>>==
 ## A 2-parameter model,  using an EWOC design with feasibility
 ## bound (MTD quantile) 
 ## of 0.25 to choose the next dose
@@ -118,7 +141,9 @@ TwoPLogistic.EWOC0.25.bcrm <- bcrm(stop=list(nmax=18), data=data,
                                    pointest=0.25, method="rjags")
 print(TwoPLogistic.EWOC0.25.bcrm)
 plot(TwoPLogistic.EWOC0.25.bcrm)
+@
 
+<<sixth, echo=TRUE>>==
 ## A 2-parameter model,  using a loss function based on
 ## intervals of toxicity to choose the next dose
 ## Using rjags (requires JAGS to be installed)
@@ -137,6 +162,9 @@ TwoPLogistic.tox.intervals.bcrm <- bcrm(stop=list(nmax=18),
                                         loss=loss, method="rjags")
 print(TwoPLogistic.tox.intervals.bcrm)
 plot(TwoPLogistic.tox.intervals.bcrm)
+@
+
+<<seventh, echo=TRUE>>==
 ## Greater loss associated with overdosing and unacceptable toxicity
 ## [0, 0.2]=1,  (0.2, 0.35]=0,  (0.35, 0.6]=2,  (0.6, 1]=4
 loss2 <- c(1, 0, 2, 4)
@@ -150,7 +178,9 @@ TwoPLogistic.tox.intervals.2.bcrm <- bcrm(stop=list(nmax=18),
                                           loss=loss2, method="rjags")
 print(TwoPLogistic.tox.intervals.2.bcrm)
 plot(TwoPLogistic.tox.intervals.2.bcrm)
+@
 
+<<last, echo=TRUE>>==
 # And a final example, not from the help file, that reveals a bug
 # on some runs
 dose <- 1:12
@@ -184,7 +214,7 @@ Sys.time() - startTime
 
 \section{Information on the R session}
 Information on the R session,  in the interests of reproducibility.
-<<sessionInfo,  echo=FALSE,  results='verbatim'>>=
+<<sessionInfo,  echo=FALSE,  results='asis'>>=
 toLatex(sessionInfo())
 @
 
