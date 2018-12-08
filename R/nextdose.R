@@ -232,22 +232,25 @@ stop.check <- function(stop, ncurrent, ndose, new.tox, new.notox, simulate){
   } 
   if(!is.null(stop$nmax)){
     answer1 <- (ncurrent>=stop$nmax)
-    if(answer1 & answer4 & !simulate) cat("\n Stopping: Reached maximum sample size\n")
+    if(answer1 & answer4 & !simulate)
+      message("\n Stopping: Reached maximum sample size")
   }  
   if(!is.null(stop$nmtd)){
     answer2 <- (new.tox+new.notox)[ndose$ndose]>=stop$nmtd
-    if(answer2 & answer4 & !simulate) cat("\n Stopping: Reached maximum number at MTD estimate\n")
+    if(answer2 & answer4 & !simulate)
+      message("\n Stopping: Reached maximum number at MTD estimate")
   }
   if(!is.null(stop$precision)){
     answer3 <-  stop$precision[1] <= ndose$quantiles["2.5%", ndose$ndose] & ndose$quantiles["97.5%", ndose$ndose]<= stop$precision[2]
-    if(answer3 & answer4 & !simulate) cat("\n Stopping: Reached required precision for MTD estimate\n")
+    if(answer3 & answer4 & !simulate)
+      message("\n Stopping: Reached required precision for MTD estimate")
   }
   if(!is.null(stop$safety)){
     ## If prob DLT of first dose being greater than TTL is > stop$safety then stop 
     answer5 <- ndose$quantiles[paste0(100*(1-stop$safety), "%"), 1]>=target.tox
     if(answer5 & answer4) {
       if(!simulate){
-        cat("\n Stopping: Safety criteria reached. No doses deemed safe\n")
+        message("\n Stopping: Safety criteria reached. No doses deemed safe")
       }
       ndose$ndose <- 0
     }

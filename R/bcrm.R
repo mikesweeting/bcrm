@@ -685,7 +685,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL, nmin=NULL, safe
     }
     ## Once stopped run following code
     if(simulate & !quietly){
-      cat(sim, "\n")
+      message(sim)
     }
     sim <- sim+1
   }
@@ -695,11 +695,11 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL, nmin=NULL, safe
   }
   if(simulate & threep3){
     if(length(truep)>9){
-      cat("\n Warning: Calculation of all 3+3 designs may take a long time,  continue?  ")
+      message("Warning: Calculation of all 3+3 designs may take a long time,  continue?  ")
       yn  <-  readline()
                 if (yn!="y" & yn=="Y") return(results)
           }
-    cat("\n Calculating operating characteristics of a standard 3+3 trial for comparison... \n")
+    message("  Calculating operating characteristics of a standard 3+3 trial for comparison...")
     results[[1]]$threep3 <- threep3(truep, start=start, dose=dose) 
   }
   return(results)
@@ -722,36 +722,35 @@ crm.interactive <- function(tox, notox, ncurrent, cohort, ndose, dose){
       y <- vector()
       
       if(is.null(dose)){
-        cat("\n\n RECOMMENDED DOSE LEVEL FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  "IS:",  ndose[[1]])
+        message("\n\n RECOMMENDED DOSE LEVEL FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  "IS:",  ndose[[1]])
         ans  <-  get.dose.level(k, ncurrent, cohort)     
       } else {
-        cat("\n\n RECOMMENDED DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  "IS:",  dose[ndose[[1]]])
+        message("\n\n RECOMMENDED DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  "IS:",  dose[ndose[[1]]])
         ans  <-  get.dose(dose, ncurrent, cohort)     
       }
       if (ans==-2)
         ans  <-  ifelse(is.null(dose), ndose[[1]], dose[ndose[[1]]])
       if (ans==0) {
-        cat("\n\n EXIT AND RETURN THE RESULTS SO FAR?")            
-        cat("\n DO YOU REALLY WANT TO EXIT ? (Y/N)  ")
+        message("\n\n EXIT AND RETURN THE RESULTS SO FAR?")            
+        message("\n DO YOU REALLY WANT TO EXIT ? (Y/N)  ")
         yn  <-  readline()
         if (yn=="y" || yn=="Y") break
         else                    next
       }  
       
-      cat("\n")
       for(j in (ncurrent-cohort+1):ncurrent){
-        cat("ENTER TOXICITY DATA FOR PATIENT", j, "(1=TOX,  0=NO TOX): ")
+        message("ENTER TOXICITY DATA FOR PATIENT", j, "(1=TOX,  0=NO TOX): ")
         y  <-  c(y, get.answer())               
       }
       # give the user a last chance to modify the treatment and outcome
-      cat("\n\n\t\t ENTERED VALUES:")
+      message("\n\t\t ENTERED VALUES:")
       if(is.null(dose)){
-        cat("\n DOSE LEVEL ...",  ans)
+        message("\n DOSE LEVEL ...",  ans)
       } else {
-        cat("\n DOSE ...",  ans)
+        message("\n DOSE ...",  ans)
       }
-      cat("\n TOXICITIES ....", y)
-      cat("\n PRESS `RETURN' IF OK,  OR ANY OTHER KEY TO ENTER NEW VALUES ")
+      message("\n TOXICITIES ....", y)
+      message("\n PRESS `RETURN' IF OK,  OR ANY OTHER KEY TO ENTER NEW VALUES ")
       key  <-  readline()
       if (nchar(key)==0) break
     }
@@ -790,8 +789,8 @@ get.answer  <-  function() {
 # ----------------------------------------------------------------------
 get.dose.level  <-  function( n , ncurrent, cohort) {
     repeat {
-        cat("\n\n ENTER DOSE LEVEL BETWEEN 1 AND ",  n, " FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)
-        cat("\n (`RETURN' TO ACCEPT RECOMMENDATION,  0 TO EXIT AND RETURN CURRENT RESULTS)  ")
+        message("\n\n ENTER DOSE LEVEL BETWEEN 1 AND ",  n, " FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)
+        message("\n (`RETURN' TO ACCEPT RECOMMENDATION,  0 TO EXIT AND RETURN CURRENT RESULTS)  ")
         
         ans  <-  readline()
         if ( nchar(ans)==0 ) return( -2 )
@@ -811,9 +810,9 @@ get.dose.level  <-  function( n , ncurrent, cohort) {
 # ----------------------------------------------------------------------
 get.dose  <-  function( dose , ncurrent, cohort) {
     repeat {
-        cat("\n\n ENTER DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)
-     cat("\n POSSIBLE CHOICES ARE ", dose)
-        cat("\n (`RETURN' TO ACCEPT RECOMMENDATION,  0 TO EXIT AND RETURN CURRENT RESULTS)  ")
+        message("\n\n ENTER DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)
+     message("\n POSSIBLE CHOICES ARE ", dose)
+        message("\n (`RETURN' TO ACCEPT RECOMMENDATION,  0 TO EXIT AND RETURN CURRENT RESULTS)  ")
         
         ans  <-  readline()
         if ( nchar(ans)==0 ) return( -2 )
@@ -1026,7 +1025,7 @@ plot.bcrm.sim <- function(x, trajectories=FALSE, file=NULL, threep3=FALSE, ...){
     }
   } else {
     if(threep3 & is.null(x[[1]]$threep3)){
-      cat("\n Calculating 3+3 operating characteristics....\n")
+      message("Calculating 3+3 operating characteristics....")
       x[[1]]$threep3 <- threep3(x[[1]]$truep, x[[1]]$start)
     }
     # sample size
@@ -1231,9 +1230,9 @@ plot.threep3 <- function(x, file=NULL, ...){
 #' of Statistical Software} (2013) 54: 1--26.
 #' \url{http://www.jstatsoft.org/article/view/v054i13}
 print.bcrm <- function(x, ...){
-  cat(" Estimation method: ", x$method, "\n")
+  cat("\n Estimation method: ", x$method)
   
-  cat("\n Target toxicity level: ", x$target.tox,  "\n")
+  cat("\n Target toxicity level: ", x$target.tox)
   
   ff.txt <- switch(x$ff
     , ht="Hyperbolic Tangent"
@@ -1241,7 +1240,7 @@ print.bcrm <- function(x, ...){
     , power="1-parameter power"
     , logit2="Two-parameter logistic")
   
-  cat("\n Model: ", ff.txt, "\n")
+  cat("\n Model: ", ff.txt)
 
   pa.txt <- switch(x$prior.alpha[[1]]
     , "1"=paste("Gamma( Shape:", x$prior.alpha[[2]], ",  Scale:", x$prior.alpha[[3]], ")", sep="")
@@ -1250,7 +1249,7 @@ print.bcrm <- function(x, ...){
     , "4"=paste("Log Multivariate Normal"))
   cat("\n Prior: ", pa.txt, "\n")
   if(x$prior.alpha[[1]]==4){
-    cat("Mean Vector: \n")
+    message("Mean Vector: ")
     print(x$prior.alpha[[2]])
     cat("\nVariance-Covariance Matrix: \n")
     print(x$prior.alpha[[3]])
@@ -1691,7 +1690,7 @@ threep3 <- function(truep, start=1, dose=NULL){
   }
 
   for(i in 3:mcplus1){
-   cat(paste(round(100*i/mcplus1), "% complete\n", sep=""))  
+   message(paste(round(100*i/mcplus1), "% complete", sep=""))
    dd <- as.character(paste("d", i))
    td <- as.character(paste("tox", i))
    dc <- as.character(paste("d", i-1))
