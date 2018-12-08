@@ -1,8 +1,8 @@
 Package: bcrm
 Type: Package
 Title: Bayesian Continual Reassessment Method for Phase I Dose-Escalation Trials
-Version: 0.4.9
-Date: 2018-10-10
+Version: 0.4.9.1
+Date: 2018-12-08
 Authors@R: as.person(c(
     "Michael Sweeting <michael.sweeting@leicester.ac.uk> [aut]", 
     "Graham Wheeler <graham.wheeler@ucl.ac.uk> [aut, cre]"
@@ -23,6 +23,6 @@ Suggests:
     R2WinBUGS,
     BRugs,
     rjags
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 URL: https://github.com/mikesweeting/bcrm
 BugReports: https://github.com/mikesweeting/bcrm/issues
