@@ -141,6 +141,12 @@ TwoPLogistic.EWOC0.25.bcrm <- bcrm(stop=list(nmax=18), data=data,
                                    pointest=0.25, method="rjags")
 print(TwoPLogistic.EWOC0.25.bcrm)
 plot(TwoPLogistic.EWOC0.25.bcrm)
+
+m <- TwoPLogistic.EWOC0.25.bcrm
+m$ndose[[length(m$ndose)]]$est
+ [1] -5.5214609 -4.6051702 -3.9120230 -3.2188758 -2.8134107
+ [6] -2.5257286 -2.3025851 -2.1202635 -1.8325815 -1.6094379
+[11] -1.2039728 -0.9162907 -0.5108256 -0.2231436  0.0000000
 @
 
 <<sixth, echo=TRUE>>==
