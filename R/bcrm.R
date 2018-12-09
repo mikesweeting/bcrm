@@ -456,13 +456,13 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
                  bugs.directory="c:/Program Files/WinBUGS14/",
                  plot=FALSE, seed=NULL,  quietly=FALSE,  file=NULL,
                  N, tox, notox){
-
+  
   # Checks of argument inputs  
   if(missing(N) & is.null(stop$nmax) & is.null(stop$nmtd) & is.null(stop$precision))
     stop("At least one stopping rule must be provided using the stop argument")
   if(!missing(N)){
-     stop$nmax <- N
-     warning("N is deprecated and users should now use the stop argument to specify the maximum sample size")
+    stop$nmax <- N
+    warning("N is deprecated and users should now use the stop argument to specify the maximum sample size")
   }
   if(!missing(tox) | !missing(notox)){
     stop("tox and nontox arguments are deprecated and users should now use the data argument to specify previous data,  see ?bcrm")
@@ -478,30 +478,29 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
   if((is.character(pointest) & pointest!="mean" & pointest!="plugin") | is.numeric(pointest) & (pointest<0 | pointest>1)) stop("pointest must be either `plugin',  `mean' or an EWOC feasibility quantile between 0 and 1")
   if(is.numeric(pointest) & method=="exact") stop("EWOC design must be fitted using MCMC methods")
   if(!is.null(tox.cutpoints) & method=="exact") stop("Escalation based on toxicity intervals must be fit using MCMC. Please specify either method=`rjags',  method='BRugs' or method='R2WinBUGS'")
-
+  
   if(simulate & is.null(truep)) stop("truep must be specified if simulating data")
   if(simulate){ 
     plot <- FALSE
-    results <- subset.results <- list()
   }
   if(!(method %in% c("exact", "rjags", "BRugs", "R2WinBUGS"))) stop("method must be either `exact',  `rjags',  `BRugs' or `R2WinBUGS'")
   ## Check to see if ff is one of "ht", "logit1", "power", "logit2"
   if((!ff %in% c("ht", "logit1", "power", "logit2"))) stop("ff must be one of `ht',  `logit1',  `power' or `logit2'")
-
+  
   if(ff=="logit2" & method=="exact") warning("Exact method slow for 2-parameter model,  suggest using rjags (MCMC)")
   if(constrain & is.null(start) & is.null(data)) stop("A starting dose level must be specified using `start' if constrain==TRUE")
   if((!is.null(tox.cutpoints) & is.null(loss)) | (is.null(tox.cutpoints) & !is.null(loss))) stop("Both tox.cutpoints and loss must be specified to conduct escalation based on toxicity intervals")
   if(!is.null(tox.cutpoints) & length(loss)!=length(tox.cutpoints)+1) stop("The number of losses must be one more than the number of cutpoints")
   if(!is.null(tox.cutpoints)) pointest <- NULL
   if(!is.null(tox.cutpoints) & ff!="logit2") warning("One-parameter models are designed as working models only,  and should not be used with an escalation strategy based on intervals of the posterior probabilities of toxicity")
-
-     if(ff=="logit2" & (length(prior.alpha[[2]])<2 | length(prior.alpha[[3]])<2)) stop("second and third components of `prior.alpha' must be vectors of size 2")
-
+  
+  if(ff=="logit2" & (length(prior.alpha[[2]])<2 | length(prior.alpha[[3]])<2)) stop("second and third components of `prior.alpha' must be vectors of size 2")
+  
   # Set seed if specified
   if(!is.null(seed)){
     set.seed(seed)
   }
-
+  
   if(missing(sdose)){
     alpha.prior.plug <- if(prior.alpha[[1]]==1){
       ifelse(sdose.calculate=="mean", prior.alpha[[2]]*prior.alpha[[3]], median(getprior(prior.alpha,  10000)))
@@ -528,7 +527,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
     if(!is.null(start)) warning("start no longer needs to be specified   if data is given; using last recruited patient as current dose")
     start <- as.numeric(data$dose[1])
   }
-
+  
   ## Cannot calculate quantiles if method=="exact" so stop$precision and stop$safety cannot be used
   if(method=="exact" & (!is.null(stop$precision) | !is.null(stop$safety))){ stop("exact method cannot be used with stop$precision or stop$safety,  please use MCMC instead")}
   
@@ -542,178 +541,58 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
       warning("Plot function not available for exact computation of 2-parameter model")
     }
   }
-  k <- length(sdose)
-  sim <- 1  
-
-  while(sim <= nsims){
-    if(simulate){
-      sub.start <- 100*floor((sim-1)/100)
-      if(sub.start>length(results)){
-        results <- c(results, subset.results)
-        subset.results <- list()
-      }
-    }
-    ## Prior
-    if(is.null(data)){
-      new.tox <-  rep(0, k)
-      new.notox <- rep(0, k)
-      current <- start-1
-      alpha <- if(sim==1) switch(method
-      , rjags=getprior(prior.alpha,  10000)
-      , BRugs=getprior(prior.alpha,  10000)
-      , R2WinBUGS=getprior(prior.alpha, 10000)
-      , exact=Posterior.exact(new.tox, new.notox, sdose, ff, prior.alpha)
-      , exact.sim=Posterior.exact.sim(new.tox, new.notox, sdose, ff, prior.alpha, pointest)
-      )
-    } else { 
-      new.tox <- as.numeric(xtabs(tox~factor(dose, levels=1:k), data=data))
-      new.notox <- as.numeric(xtabs((1-tox)~factor(dose, levels=1:k), data=data))
-      current <- as.numeric(data$dose[dim(data)[1]])
-      alpha <- if(sim==1) switch(method
-      , rjags=Posterior.rjags(new.tox, new.notox, sdose, ff, prior.alpha, burnin.itr, production.itr)
-      , BRugs=Posterior.BRugs(new.tox, new.notox, sdose, ff, prior.alpha, burnin.itr, production.itr)
-      , R2WinBUGS=Posterior.R2WinBUGS(new.tox, new.notox, sdose, ff, prior.alpha, burnin.itr, production.itr, bugs.directory)
-      , exact=Posterior.exact(new.tox, new.notox, sdose, ff, prior.alpha)
-      , exact.sim=Posterior.exact.sim(new.tox, new.notox, sdose, ff, prior.alpha, pointest)
-      )
-    }
-    ncurrent <- sum(new.tox+new.notox)
-    if(is.null(data)){
-      newdata <- data.frame(patient=NULL, dose=NULL, tox=NULL)
-    } else{
-      newdata <- data
-    }
-    found <- FALSE
-    match <- 1
-    if(sim==1){
-      if(is.null(stop$safety)){
-        quantiles <- c(0.025, 0.25, 0.50, 0.75, 0.975)
-      } else {
-        quantiles <- sort(unique(c(0.025, 0.25, 0.50, 0.75, 0.975, 1-stop$safety)))
-      }
-      prior.ndose <- switch(method
-        , rjags=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-        , BRugs=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-        , R2WinBUGS=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-        , exact=nextdose.exact(alpha, sdose, ff, target.tox, constrain, pointest, current)
-        , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, pointest, current)
-        )
-    }   
-    ndose <- prior.ndose
-
-    stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox, simulate)
-    ndose <- stopped$ndose ## update ndose incase no doses are deemed safe
-    
-    if(!simulate){
-      results <- list(dose=dose, sdose=sdose, tox=new.tox, notox=new.notox, ndose=list(ndose), constrain=constrain, start=start, target.tox=target.tox, ff=ff, method=method, pointest=pointest, tox.cutpoints=tox.cutpoints, loss=loss, prior.alpha=prior.alpha, data=data)
-      class(results) <- "bcrm"
-    } else {
-      subset.results[[sim-sub.start]] <- list(dose=dose, sdose=sdose, tox=new.tox, notox=new.notox, ndose=list(ndose), constrain=constrain, start=start, target.tox=target.tox, ff=ff, method=method, pointest=pointest, tox.cutpoints=tox.cutpoints, loss=loss, prior.alpha=prior.alpha, truep=truep)
-    }
-    if(plot){
-      plot(results, file)
-    }
-    
-    while(!stopped$stop){
-      current <- ndose[[1]]
-      ncurrent <- ncurrent+cohort
-      if(!simulate){
-        interact <- crm.interactive(new.tox, new.notox, ncurrent, cohort, ndose, dose)
-        if(interact$bk==TRUE){
-        #  results$tox <- new.tox
-        #  results$notox <- new.notox
-        #  results$ndose[[length(results$ndose)+1]] <- ndose
-          results$data <- newdata
-          return(results)
-        }
-        y <- interact$y
-        new.tox <- interact$tox
-        new.notox <- interact$notox
-        current <- interact$ans
-      } else {  
-        y <- rbinom(cohort, 1, truep[ndose[[1]]]) 
-        new.notox[ndose[[1]]] <- new.notox[ndose[[1]]]+(cohort-sum(y))
-        new.tox[ndose[[1]]] <- new.tox[ndose[[1]]]+sum(y)
-      }
-      currentdata <- data.frame(patient=(ncurrent-cohort+1):ncurrent, dose=rep(current, cohort), tox=y)
-      newdata <- rbind(newdata, currentdata)    
   
-      if(simulate & match<length(results) & method!="exact.sim"){
-        repeat{
-          match.tox <- all(xtabs(tox~factor(dose, levels=1:k), data=results[[match]]$data[1:dim(newdata)[1], ])==xtabs(tox~factor(dose, levels=1:k), data=newdata))
-          match.notox <- all(xtabs((1-tox)~factor(dose, levels=1:k), data=results[[match]]$data[1:dim(newdata)[1], ])==xtabs((1-tox)~factor(dose, levels=1:k), data=newdata))
-          match.current <- results[[match]]$data$dose[dim(newdata)[1]]==newdata$dose[dim(newdata)[1]]
-          m <- match.tox & match.notox & match.current
-    # alternative  m <- all(results[[match]]$data[1:dim(newdata)[1], ] == newdata)
-          if(m){
-            ndose <- results[[match]]$ndose[[length(subset.results[[sim-sub.start]]$ndose)+1]]
-            found <- TRUE
-            break
-          } else if(match!=(length(results)-1)){
-            match <- match+1
-          } else {
-            match <- match+1  
-            found <- FALSE      
-            break
-          }
-        }
-      } 
-      if(!found){
-        alpha <- switch(method
-          , rjags=Posterior.rjags(new.tox,  new.notox,  sdose,  ff,  prior.alpha,  burnin.itr,  production.itr)
-          , BRugs=Posterior.BRugs(new.tox,  new.notox,  sdose,  ff,  prior.alpha,  burnin.itr,  production.itr)
-          , R2WinBUGS=Posterior.R2WinBUGS(new.tox,  new.notox,  sdose,  ff,  prior.alpha,  burnin.itr,  production.itr, bugs.directory)
-          , exact=Posterior.exact(new.tox, new.notox, sdose, ff, prior.alpha)
-          , exact.sim=Posterior.exact.sim(new.tox, new.notox, sdose, ff, prior.alpha, pointest)
-          )
-        ndose <- switch(method
-          , rjags=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-          , BRugs=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-          , R2WinBUGS=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-          , exact=nextdose.exact(alpha, sdose, ff, target.tox, constrain, pointest, current)
-          , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, pointest, current)
-          )
+  k <- length(sdose)
+  
+  # Set up
+  
+  if(is.null(stop$safety)){
+    quantiles <- c(0.025, 0.25, 0.50, 0.75, 0.975)
+  } else {
+    quantiles <- sort(unique(c(0.025, 0.25, 0.50, 0.75, 0.975, 1-stop$safety)))
+  }
+  
+  new.tox <- new.notox <- rep(0, k)
+  current <- start - 1
+  
+  alpha <- switch(method
+                  , rjags=getprior(prior.alpha,  10000)
+                  , BRugs=getprior(prior.alpha,  10000)
+                  , R2WinBUGS=getprior(prior.alpha, 10000)
+                  , exact=Posterior.exact(new.tox, new.notox, sdose, ff, prior.alpha)
+                  , exact.sim=Posterior.exact.sim(new.tox, new.notox, sdose, ff, prior.alpha, pointest)
+  )
+  prior.ndose <- switch(method
+                        , rjags=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
+                        , BRugs=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
+                        , R2WinBUGS=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
+                        , exact=nextdose.exact(alpha, sdose, ff, target.tox, constrain, pointest, current)
+                        , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, pointest, current)
+  )
+  ndose <- prior.ndose
+
+
+  if (simulate){
+    out <- lapply(1:nsims, simFun)
+    class(out) <- "bcrm.sim"
+    if (threep3){
+      if(length(truep) > 9){
+        message("Warning: Calculation of all 3+3 designs may take a long time,  continue?  ")
+        yn  <-  readline()
+        if (yn!="y" & yn=="Y") return(out)
       }
-      
-      stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox, simulate)
-      ndose <- stopped$ndose ## update ndose in case no doses are deemed safe
-      
-      
-      if(!simulate){
-        results$tox <- new.tox
-        results$notox <- new.notox
-        results$ndose[[length(results$ndose)+1]] <- ndose
-        results$data <- newdata
-      } else{
-        subset.results[[sim-sub.start]]$tox <- new.tox
-        subset.results[[sim-sub.start]]$notox <- new.notox
-        subset.results[[sim-sub.start]]$ndose[[length(subset.results[[sim-sub.start]]$ndose)+1]] <- ndose
-        subset.results[[sim-sub.start]]$data <- newdata      }
-      if(plot){
-        plot(results, file)
-      }
+      message("  Calculating operating characteristics of a standard 3+3 trial for comparison...")
+      out[[1]]$threep3 <- threep3(truep, start=start, dose=dose) 
     }
-    ## Once stopped run following code
-    if(simulate & !quietly){
-      message(sim)
-    }
-    sim <- sim+1
+  } else { # not simulating
+    out <- lapply(1:nsims, intFun)
   }
-  if(simulate){
-    results <- c(results, subset.results)
-    class(results) <- "bcrm.sim"
-  }
-  if(simulate & threep3){
-    if(length(truep)>9){
-      message("Warning: Calculation of all 3+3 designs may take a long time,  continue?  ")
-      yn  <-  readline()
-                if (yn!="y" & yn=="Y") return(results)
-          }
-    message("  Calculating operating characteristics of a standard 3+3 trial for comparison...")
-    results[[1]]$threep3 <- threep3(truep, start=start, dose=dose) 
-  }
-  return(results)
+  
+  
+  return(out)
 }
+
+
 
 # ----------------------------------------------------------------------
 #   CRM INTERACTIVE. Conduct a CRM trial interactively allowing user to specify outcomes after each cohort has been recruited
@@ -725,53 +604,53 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
 #  dose     --> Dose labels for each dose
 # ----------------------------------------------------------------------
 crm.interactive <- function(tox, notox, ncurrent, cohort, ndose, dose){
-     k  <-  length(tox)
-    repeat {
-      # y.j is toxicity information from the treatment of patient j in the current
-      # cohort of patients at dose level ndose
-      y <- vector()
-      
-      if(is.null(dose)){
-        message("\n\n RECOMMENDED DOSE LEVEL FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  "IS:",  ndose[[1]])
-        ans  <-  get.dose.level(k, ncurrent, cohort)     
-      } else {
-        message("\n\n RECOMMENDED DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  "IS:",  dose[ndose[[1]]])
-        ans  <-  get.dose(dose, ncurrent, cohort)     
-      }
-      if (ans==-2)
-        ans  <-  ifelse(is.null(dose), ndose[[1]], dose[ndose[[1]]])
-      if (ans==0) {
-        message("\n\n EXIT AND RETURN THE RESULTS SO FAR?")            
-        message("\n DO YOU REALLY WANT TO EXIT ? (Y/N)  ")
-        yn  <-  readline()
-        if (yn=="y" || yn=="Y") break
-        else                    next
-      }  
-      
-      for(j in (ncurrent-cohort+1):ncurrent){
-        message("ENTER TOXICITY DATA FOR PATIENT", j, "(1=TOX,  0=NO TOX): ")
-        y  <-  c(y, get.answer())               
-      }
-      # give the user a last chance to modify the treatment and outcome
-      message("\n\t\t ENTERED VALUES:")
-      if(is.null(dose)){
-        message("\n DOSE LEVEL ...",  ans)
-      } else {
-        message("\n DOSE ...",  ans)
-      }
-      message("\n TOXICITIES ....", y)
-      message("\n PRESS `RETURN' IF OK,  OR ANY OTHER KEY TO ENTER NEW VALUES ")
-      key  <-  readline()
-      if (nchar(key)==0) break
+  k  <-  length(tox)
+  repeat {
+    # y.j is toxicity information from the treatment of patient j in the current
+    # cohort of patients at dose level ndose
+    y <- vector()
+    
+    if(is.null(dose)){
+      message("\n\n RECOMMENDED DOSE LEVEL FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  "IS:",  ndose[[1]])
+      ans  <-  get.dose.level(k, ncurrent, cohort)     
+    } else {
+      message("\n\n RECOMMENDED DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  "IS:",  dose[ndose[[1]]])
+      ans  <-  get.dose(dose, ncurrent, cohort)     
     }
-     if (ans==0)  
-       return(list(tox=tox,  notox=notox,  y=y,  bk=TRUE,  ans=ans))
-     if(!is.null(dose)){
-       ans <- which(dose==ans)
-     }
-     notox[ans] <- notox[ans]+(cohort-sum(y))
-     tox[ans] <- tox[ans]+sum(y)
-     return(list(tox=tox,  notox=notox,  y=y,  bk=FALSE,  ans=ans))
+    if (ans==-2)
+      ans  <-  ifelse(is.null(dose), ndose[[1]], dose[ndose[[1]]])
+    if (ans==0) {
+      message("\n\n EXIT AND RETURN THE RESULTS SO FAR?")            
+      message("\n DO YOU REALLY WANT TO EXIT ? (Y/N)  ")
+      yn  <-  readline()
+      if (yn=="y" || yn=="Y") break
+      else                    next
+    }  
+    
+    for(j in (ncurrent-cohort+1):ncurrent){
+      message("ENTER TOXICITY DATA FOR PATIENT", j, "(1=TOX,  0=NO TOX): ")
+      y  <-  c(y, get.answer())               
+    }
+    # give the user a last chance to modify the treatment and outcome
+    message("\n\t\t ENTERED VALUES:")
+    if(is.null(dose)){
+      message("\n DOSE LEVEL ...",  ans)
+    } else {
+      message("\n DOSE ...",  ans)
+    }
+    message("\n TOXICITIES ....", y)
+    message("\n PRESS `RETURN' IF OK,  OR ANY OTHER KEY TO ENTER NEW VALUES ")
+    key  <-  readline()
+    if (nchar(key)==0) break
+  }
+  if (ans==0)  
+    return(list(tox=tox,  notox=notox,  y=y,  bk=TRUE,  ans=ans))
+  if(!is.null(dose)){
+    ans <- which(dose==ans)
+  }
+  notox[ans] <- notox[ans]+(cohort-sum(y))
+  tox[ans] <- tox[ans]+sum(y)
+  return(list(tox=tox,  notox=notox,  y=y,  bk=FALSE,  ans=ans))
 }
 
 
@@ -780,12 +659,12 @@ crm.interactive <- function(tox, notox, ncurrent, cohort, ndose, dose){
 #   Must be either 0 and 1
 # ----------------------------------------------------------------------
 get.answer  <-  function() {   
-    repeat {
-        ans  <-  as.numeric(readline())
-        if (is.na(ans)) next
-        if (ans != floor(ans)) next
-        if (ans>=0 & ans<=1) return(ans)
-    }
+  repeat {
+    ans  <-  as.numeric(readline())
+    if (is.na(ans)) next
+    if (ans != floor(ans)) next
+    if (ans>=0 & ans<=1) return(ans)
+  }
 }
 
 # ----------------------------------------------------------------------
@@ -798,16 +677,16 @@ get.answer  <-  function() {
 #     cohort - cohort size
 # ----------------------------------------------------------------------
 get.dose.level  <-  function( n , ncurrent, cohort) {
-    repeat {
-        message("\n\n ENTER DOSE LEVEL BETWEEN 1 AND ",  n, " FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)
-        message("\n (`RETURN' TO ACCEPT RECOMMENDATION,  0 TO EXIT AND RETURN CURRENT RESULTS)  ")
-        
-        ans  <-  readline()
-        if ( nchar(ans)==0 ) return( -2 )
-        ans  <-  as.integer(ans)
-        if (is.na(ans)) next
-        if ( -1<=ans && ans<=n ) return( ans )
-    }
+  repeat {
+    message("\n\n ENTER DOSE LEVEL BETWEEN 1 AND ",  n, " FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)
+    message("\n (`RETURN' TO ACCEPT RECOMMENDATION,  0 TO EXIT AND RETURN CURRENT RESULTS)  ")
+    
+    ans  <-  readline()
+    if ( nchar(ans)==0 ) return( -2 )
+    ans  <-  as.integer(ans)
+    if (is.na(ans)) next
+    if ( -1<=ans && ans<=n ) return( ans )
+  }
 }
 
 # ----------------------------------------------------------------------
@@ -819,16 +698,16 @@ get.dose.level  <-  function( n , ncurrent, cohort) {
 #     cohort - cohort size
 # ----------------------------------------------------------------------
 get.dose  <-  function( dose , ncurrent, cohort) {
-    repeat {
-        message("\n\n ENTER DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)
-     message("\n POSSIBLE CHOICES ARE ", dose)
-        message("\n (`RETURN' TO ACCEPT RECOMMENDATION,  0 TO EXIT AND RETURN CURRENT RESULTS)  ")
-        
-        ans  <-  readline()
-        if ( nchar(ans)==0 ) return( -2 )
-        if (is.na(ans)) next
-        if ( ans %in% dose | ans==0) return( ans )
-    }
+  repeat {
+    message("\n\n ENTER DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)
+    message("\n POSSIBLE CHOICES ARE ", dose)
+    message("\n (`RETURN' TO ACCEPT RECOMMENDATION,  0 TO EXIT AND RETURN CURRENT RESULTS)  ")
+    
+    ans  <-  readline()
+    if ( nchar(ans)==0 ) return( -2 )
+    if (is.na(ans)) next
+    if ( ans %in% dose | ans==0) return( ans )
+  }
 }
 
 
@@ -877,8 +756,8 @@ plot.bcrm <- function(x, file=NULL, each=FALSE, trajectory=FALSE, ...){
     df$Toxicity <- ifelse(df$tox==1, "Yes", "No")
     cols <-  c("No" = "black", "Yes" = "red")
     a <- ggplot()+geom_point(aes(x=patient, y=dose, shape=Toxicity, colour=Toxicity), size=3, data=df)+
-    scale_colour_manual(values=cols)+
-    xlab("Patient")+ylab("Dose Level")
+      scale_colour_manual(values=cols)+
+      xlab("Patient")+ylab("Dose Level")
     print(a)
     if(!is.null(file))
       ggsave(paste(file, ".pdf", sep=""), ...)
@@ -902,11 +781,11 @@ plot.bcrm <- function(x, file=NULL, each=FALSE, trajectory=FALSE, ...){
     } else { # each=TRUE
       if(x$method %in% c("exact", "exact.sim") & x$ff=="logit2"){
         df <- data.frame(dose=rep(dose, length(x$ndose)), target.tox=x$target.tox, cohort=rep(0:(length(x$ndose)-1), each=length(dose)), est=c(sapply(1:length(x$ndose), function(i){x$ndose[[i]]$est})), 
-          ndose=rep(sapply(1:length(x$ndose), function(i){dose[x$ndose[[i]]$ndose]}), each=length(dose)))
+                         ndose=rep(sapply(1:length(x$ndose), function(i){dose[x$ndose[[i]]$ndose]}), each=length(dose)))
       } else {
         df <- data.frame(dose=rep(dose, length(x$ndose)), target.tox=x$target.tox, cohort=rep(0:(length(x$ndose)-1), each=length(dose)), est=c(sapply(1:length(x$ndose), function(i){x$ndose[[i]]$est})), mean=c(sapply(1:length(x$ndose), function(i){x$ndose[[i]]$mean})), q2.5=c(sapply(1:length(x$ndose), function(i){x$ndose[[i]]$quantiles["2.5%", ]})), q25=c(sapply(1:length(x$ndose), function(i){x$ndose[[i]]$quantiles["25%", ]})), 
-          q50=c(sapply(1:length(x$ndose), function(i){x$ndose[[i]]$quantiles["50%", ]})), q75=c(sapply(1:length(x$ndose), function(i){x$ndose[[i]]$quantiles["75%", ]})), q97.5=c(sapply(1:length(x$ndose), function(i){x$ndose[[i]]$quantiles["97.5%", ]})), 
-          ndose=rep(sapply(1:length(x$ndose), function(i){dose[x$ndose[[i]]$ndose]}), each=length(dose)))
+                         q50=c(sapply(1:length(x$ndose), function(i){x$ndose[[i]]$quantiles["50%", ]})), q75=c(sapply(1:length(x$ndose), function(i){x$ndose[[i]]$quantiles["75%", ]})), q97.5=c(sapply(1:length(x$ndose), function(i){x$ndose[[i]]$quantiles["97.5%", ]})), 
+                         ndose=rep(sapply(1:length(x$ndose), function(i){dose[x$ndose[[i]]$ndose]}), each=length(dose)))
       }
       df2 <- data.frame()
     }
@@ -995,7 +874,7 @@ plot.bcrm <- function(x, file=NULL, each=FALSE, trajectory=FALSE, ...){
         ylab("Number") +
         scale_fill_hue(limits=c("DLT", "No DLT"))
     } else { NULL  }
-  
+    
     if(!is.null(file))
       pdf(paste(file, sum(x$tox+x$notox), ".pdf", sep=""), ...)
     if(!each){
@@ -1052,7 +931,7 @@ plot.bcrm <- function(x, file=NULL, each=FALSE, trajectory=FALSE, ...){
 plot.bcrm.sim <- function(x, trajectories=FALSE, file=NULL, threep3=FALSE, ...){
   dose <- if(is.null(x[[1]]$dose)) x[[1]]$sdose else x[[1]]$dose
   dose.label <- if(is.null(x[[1]]$dose)) "Standardised dose" else "Dose"
-
+  
   if(trajectories){
     ## sample size
     n <- sapply(x, function(i){dim(i$data)[1]})
@@ -1072,7 +951,7 @@ plot.bcrm.sim <- function(x, trajectories=FALSE, file=NULL, threep3=FALSE, ...){
         xlab("Patient")+ylab("Dose Level")
       if(!is.null(file))
         pdf(paste(file, ".pdf", sep=""), ...)
-
+      
       print(b)
       if(!is.null(file))
         dev.off()
@@ -1112,7 +991,7 @@ plot.bcrm.sim <- function(x, trajectories=FALSE, file=NULL, threep3=FALSE, ...){
       df.exp.threep3 <- data.frame(exp=factor(c(exp, exp.threep3)), Method=rep(c("CRM", "3+3"), c(length(exp), length(exp.threep3))), weight=c(rep(1/length(exp), length(exp)), rep(1/length(exp.threep3), length(exp.threep3))))
       b <- ggplot()+geom_bar(aes(x=exp, y=100*..count.., weight=weight, fill=Method), data=df.exp.threep3, position="dodge")+xlab(dose.label)+ylab("Percent")+ggtitle("Experimentation")
     }
-
+    
     # recommendation
     rec <-   sapply(x, function(i){ifelse(i$ndose[[length(i$ndose)]]$ndose==0, 0, dose[i$ndose[[length(i$ndose)]]$ndose])})
     if(!threep3){
@@ -1135,7 +1014,7 @@ plot.bcrm.sim <- function(x, trajectories=FALSE, file=NULL, threep3=FALSE, ...){
       # new version >= 0.4.7 
       df.obs <- data.frame(obs=bw*round(obs/bw))
       d <- ggplot()+geom_bar(aes(x=obs, y=100*..count../sum(..count..)), data=df.obs)+
-            xlab("Percentage of subjects with DLTs")+ylab("Percent of trials")+ggtitle("DLTs")
+        xlab("Percentage of subjects with DLTs")+ylab("Percent of trials")+ggtitle("DLTs")
     } else {
       obs.threep3 <- 100*x[[1]]$threep3$dlt.no/x[[1]]$threep3$ssize
       range <- range(c(obs, obs.threep3))
@@ -1165,7 +1044,7 @@ plot.bcrm.sim <- function(x, trajectories=FALSE, file=NULL, threep3=FALSE, ...){
     print(d, vp=vplayout(2, 2))  
     if(!is.null(file))
       dev.off()
-    }
+  }
 }
 
 #-----------------------------------------------------------------------
@@ -1202,7 +1081,7 @@ plot.threep3 <- function(x, file=NULL, ...){
   n.threep3 <- x$ssize
   df.n.threep3 <- data.frame(n=n.threep3, weight=x$prob)
   a <- ggplot()+stat_bin(aes(x=n, y=100*..density.., weight=weight), data=df.n.threep3, binwidth=1)+xlab("Sample size")+ylab("Percent")+ggtitle("Sample size")
-
+  
   # experimentation
   exp.threep3 <- rep(dose, 10000*x$exp)
   df.exp.threep3 <- data.frame(exp=as.factor(exp.threep3))
@@ -1212,7 +1091,7 @@ plot.threep3 <- function(x, file=NULL, ...){
   rec.threep3 <- dose[x$mtd]
   df.rec.threep3 <- data.frame(rec=factor(rec.threep3), weight=x$prob[x$mtd!=0])
   c <- ggplot()+geom_bar(aes(x=rec, y=100*..count.., weight=weight), data=df.rec.threep3)+xlab(dose.label)+ylab("Percent")+ggtitle("Recommendation")
-
+  
   # observed DLTs
   obs.threep3 <- 100*x$dlt.no/x$ssize
   bw <- max(diff(range(obs.threep3[x$prob>0]))/30, 1)
@@ -1296,18 +1175,18 @@ print.bcrm <- function(x, ...){
   cat("\n Target toxicity level: ", x$target.tox)
   
   ff.txt <- switch(x$ff
-    , ht="Hyperbolic Tangent"
-    , logit1="1-parameter logistic"
-    , power="1-parameter power"
-    , logit2="Two-parameter logistic")
+                   , ht="Hyperbolic Tangent"
+                   , logit1="1-parameter logistic"
+                   , power="1-parameter power"
+                   , logit2="Two-parameter logistic")
   
   cat("\n Model: ", ff.txt)
-
+  
   pa.txt <- switch(x$prior.alpha[[1]]
-    , "1"=paste("Gamma( Shape:", x$prior.alpha[[2]], ",  Scale:", x$prior.alpha[[3]], ")", sep="")
-    , "2"=paste("Uniform(", x$prior.alpha[[2]], ",  ", x$prior.alpha[[3]], ")", sep="")
-    , "3"=paste("Lognormal( Mean:", x$prior.alpha[[2]], ",  Variance:", x$prior.alpha[[3]], ")", sep="")
-    , "4"=paste("Log Multivariate Normal"))
+                   , "1"=paste("Gamma( Shape:", x$prior.alpha[[2]], ",  Scale:", x$prior.alpha[[3]], ")", sep="")
+                   , "2"=paste("Uniform(", x$prior.alpha[[2]], ",  ", x$prior.alpha[[3]], ")", sep="")
+                   , "3"=paste("Lognormal( Mean:", x$prior.alpha[[2]], ",  Variance:", x$prior.alpha[[3]], ")", sep="")
+                   , "4"=paste("Log Multivariate Normal"))
   cat("\n Prior: ", pa.txt, "\n")
   if(x$prior.alpha[[1]]==4){
     message("Mean Vector: ")
@@ -1319,7 +1198,7 @@ print.bcrm <- function(x, ...){
   names(tab1) <- x$dose
   cat("\n Standardised doses (skeleton): \n")
   print(tab1)
-
+  
   if(x$constrain) { 
     if(is.null(x$dose)){
       cat("\n Modified (constrained) CRM used,  starting dose level: ", x$start, "\n") 
@@ -1342,14 +1221,14 @@ print.bcrm <- function(x, ...){
     cat("\n", 100*x$pointest, "percentile of (standardised) MTD distribution used to select next dose")
     cat("\n", 100*x$pointest, "percentile is:", x$ndose[[length(x$ndose)]]$target, "\n")
   }  
-
+  
   tab <- rbind(x$tox+x$notox, x$tox)
   rownames(tab) <- c("n", "Toxicities")
   colnames(tab) <- x$dose
   names(dimnames(tab)) <- c("", "Doses")
   cat("\n Toxicities observed: \n")
   print(tab)
-
+  
   if(x$method %in% c("exact", "exact.sim") & x$ff=="logit2"){
     tab2a <- signif(rbind(x$ndose[[length(x$ndose)]]$est), 3)
     rownames(tab2a) <- c("Point estimate")
@@ -1387,11 +1266,11 @@ print.bcrm <- function(x, ...){
   if(is.null(x$dose)){
     cat("\n Next recommended dose level: ", x$ndose[[length(x$ndose)]]$ndose, "\n")
   } else {
-      if(x$ndose[[length(x$ndose)]]$ndose!=0){
-        cat("\n Next recommended dose: ", x$dose[x$ndose[[length(x$ndose)]]$ndose], "\n")
-      } else {
-        cat("\n No recommended dose levels are safe", "\n")
-      }
+    if(x$ndose[[length(x$ndose)]]$ndose!=0){
+      cat("\n Next recommended dose: ", x$dose[x$ndose[[length(x$ndose)]]$ndose], "\n")
+    } else {
+      cat("\n No recommended dose levels are safe", "\n")
+    }
   }
 }
 
@@ -1527,7 +1406,7 @@ print.threep3 <- function(x, tox.cutpoints=NULL, dose=NULL, ...){
   rownames(tab3) <- c("Average number of patients", "Average number of DLTs")
   colnames(tab3) <- dose
   names(dimnames(tab3)) <- c("", "Doses")
-
+  
   print(tab0)
   cat("\n")
   print(tab)
