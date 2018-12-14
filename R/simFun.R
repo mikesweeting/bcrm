@@ -1,4 +1,4 @@
-simFun <- function(X, stop, ndose, sdose, constrain, start, ff,
+simFun <- function(X, stop, ndose, sdose, dose, constrain, start, ff,
                    cohort,
                    method, pointest, tox.cutpoints, loss,
                    prior.alpha, truep, quietly=10){

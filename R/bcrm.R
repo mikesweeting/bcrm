@@ -458,6 +458,12 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
                  plot=FALSE, seed=NULL,  quietly=10,  file=NULL,
                  N, tox, notox){
   
+  # For compatability with older versions, allow logical quietly
+  if (is.logical(quietly)){
+    if (quietly) quietly <- nsims + 1
+    else quietly <- 1
+  }
+  
   # Checks of argument inputs  
   if(missing(N) & is.null(stop$nmax) & is.null(stop$nmtd) & is.null(stop$precision))
     stop("At least one stopping rule must be provided using the stop argument")
@@ -573,14 +579,14 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
                           , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, pointest, current)
     )
     ndose <- prior.ndose
-    
-    out <- lapply(1:nsims, simFun, stop, ndose, sdose, constrain, start, ff,
+
+    out <- lapply(1:nsims, simFun, stop, ndose, sdose, dose, constrain, start, ff,
                                   cohort,
                                   method, pointest, tox.cutpoints, loss,
                                   prior.alpha, truep, quietly)
     class(out) <- "bcrm.sim"
     if (threep3){
-      if(length(truep) > 9){
+      if(length(truep) > 9 & !quietly){
         message("Warning: Calculation of all 3+3 designs may take a long time,  continue?  ")
         yn  <-  readline()
         if (yn!="y" & yn=="Y") return(out)
@@ -1377,7 +1383,7 @@ print.bcrm.sim <- function(x, tox.cutpoints=NULL, trajectories=FALSE,
     n.average <- mean(sapply(x, function(i){dim(i$data)[1]}))
     n.min <- min(sapply(x, function(i){dim(i$data)[1]}))
     n.max <- max(sapply(x, function(i){dim(i$data)[1]}))
-    if(n.min==n.max){
+    if(n.min == n.max){
       tab0 <- cbind(n.average)
       rownames(tab0) <- "Sample size"
       colnames(tab0) <- ""
@@ -1386,16 +1392,20 @@ print.bcrm.sim <- function(x, tox.cutpoints=NULL, trajectories=FALSE,
       rownames(tab0) <- "Sample size"
       colnames(tab0) <- c("Mean", "Minimum", "Maximum")
     }
-    exp <- sapply(x, function(i){(i$tox+i$notox)/sum(i$tox+i$notox)})
-    exp.tab <- c(NA, apply(exp, 1, mean))
+    exper <- sapply(x, function(i){ (i$tox+i$notox) / sum(i$tox+i$notox)} )
+    exp.tab <- c(NA, apply(exper, 1, mean))
     rec <- sapply(x, function(i){
       i$ndose[[length(i$ndose)]]$ndose
       })
     rec.tab <- prop.table(table(factor(rec, levels=0:length(x[[1]]$tox))))
-    
     tab <- signif(rbind(exp.tab, rec.tab), 3)
     rownames(tab) <- c("Experimentation proportion", "Recommendation proportion")
-    dose <- if(is.null(x[[1]]$dose)){1:length(x[[1]]$truep)} else {x[[1]]$dose}
+    dose <- if(is.null(x[[1]]$dose)){
+      1:length(x[[1]]$truep)
+    } else {
+        x[[1]]$dose
+    }
+
     colnames(tab) <- c("No dose", dose)
     names(dimnames(tab)) <- c("", "Doses")
     if(is.null(tox.cutpoints)){
@@ -1405,7 +1415,11 @@ print.bcrm.sim <- function(x, tox.cutpoints=NULL, trajectories=FALSE,
     }
     exp.tox <- prop.table(table(cut(unlist(sapply(x, function(i){rep(i$truep, (i$tox+i$notox))}, simplify=FALSE)), tox.cutpoints, include.lowest=T)))
     ## rec.tox updated on 04/07/17 so that trials that do not recommend a dose are classified as recommending a dose with 0% DLT rate
-    rec.tox <- prop.table(table(cut(sapply(x, function(i){ifelse(i$ndose[[length(i$ndose)]]$ndose==0, 0, i$truep[i$ndose[[length(i$ndose)]]$ndose])}), tox.cutpoints, include.lowest=T)))
+    rec.tox <- prop.table(table(cut(sapply(x,
+                                           function(i){
+                                             ifelse(i$ndose[[length(i$ndose)]]$ndose==0, 0, i$truep[i$ndose[[length(i$ndose)]]$ndose])
+                                            }),
+                                    tox.cutpoints, include.lowest=T)))
     tab2 <- signif(rbind(exp.tox, rec.tox), 3)
     rownames(tab2) <- c("Experimentation proportion", "Recommendation proportion")
     names(dimnames(tab2)) <- c("", "Probability of DLT")
@@ -1416,7 +1430,7 @@ print.bcrm.sim <- function(x, tox.cutpoints=NULL, trajectories=FALSE,
     cat("\n")
     print(tab2)
     if(threep3 & is.null(x[[1]]$threep3)){
-      cat("\n Calculating 3+3 operating characteristics....\n")
+      message("\n Calculating 3+3 operating characteristics....\n")
       x[[1]]$threep3 <- threep3(x[[1]]$truep, x[[1]]$start)
     }
     if(threep3){
