@@ -552,27 +552,27 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
     quantiles <- sort(unique(c(0.025, 0.25, 0.50, 0.75, 0.975, 1-stop$safety)))
   }
   
-  new.tox <- new.notox <- rep(0, k)
-  current <- start - 1
   
-  alpha <- switch(method
-                  , rjags=getprior(prior.alpha,  10000)
-                  , BRugs=getprior(prior.alpha,  10000)
-                  , R2WinBUGS=getprior(prior.alpha, 10000)
-                  , exact=Posterior.exact(new.tox, new.notox, sdose, ff, prior.alpha)
-                  , exact.sim=Posterior.exact.sim(new.tox, new.notox, sdose, ff, prior.alpha, pointest)
-  )
-  prior.ndose <- switch(method
-                        , rjags=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-                        , BRugs=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-                        , R2WinBUGS=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-                        , exact=nextdose.exact(alpha, sdose, ff, target.tox, constrain, pointest, current)
-                        , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, pointest, current)
-  )
-  ndose <- prior.ndose
-
-
   if (simulate){
+    new.tox <- new.notox <- rep(0, k)
+    current <- start - 1
+    
+    alpha <- switch(method
+                    , rjags=getprior(prior.alpha,  10000)
+                    , BRugs=getprior(prior.alpha,  10000)
+                    , R2WinBUGS=getprior(prior.alpha, 10000)
+                    , exact=Posterior.exact(new.tox, new.notox, sdose, ff, prior.alpha)
+                    , exact.sim=Posterior.exact.sim(new.tox, new.notox, sdose, ff, prior.alpha, pointest)
+    )
+    prior.ndose <- switch(method
+                          , rjags=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
+                          , BRugs=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
+                          , R2WinBUGS=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
+                          , exact=nextdose.exact(alpha, sdose, ff, target.tox, constrain, pointest, current)
+                          , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, pointest, current)
+    )
+    ndose <- prior.ndose
+    
     out <- lapply(1:nsims, simFun)
     class(out) <- "bcrm.sim"
     if (threep3){
@@ -585,9 +585,89 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
       out[[1]]$threep3 <- threep3(truep, start=start, dose=dose) 
     }
   } else { # not simulating
-    out <- lapply(1:nsims, intFun)
+    new.tox <- as.numeric(xtabs(tox ~ factor(dose, levels=1:k), data=data))
+    new.notox <- as.numeric(xtabs((1 - tox) ~ factor(dose,levels=1:k), data=data))
+    current <- as.numeric(data$dose[dim(data)[1]])
+    alpha <-switch(method
+                   ,rjags=Posterior.rjags(new.tox,new.notox,sdose,ff,prior.alpha,burnin.itr,production.itr)
+                   ,BRugs=Posterior.BRugs(new.tox,new.notox,sdose,ff,prior.alpha,burnin.itr,production.itr)
+                   ,R2WinBUGS=Posterior.R2WinBUGS(new.tox,new.notox,sdose,ff,prior.alpha,burnin.itr,production.itr,bugs.directory)
+                   ,exact=Posterior.exact(new.tox,new.notox,sdose,ff,prior.alpha)
+                   ,exact.sim=Posterior.exact.sim(new.tox,new.notox,sdose,ff,prior.alpha,pointest))
+    
+    ncurrent <- sum(new.tox + new.notox)
+    
+    newdata <- data
+    
+    prior.ndose<-switch(method
+                        ,rjags=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
+                        ,BRugs=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
+                        ,R2WinBUGS=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
+                        ,exact=nextdose.exact(alpha,sdose,ff,target.tox,constrain,pointest,current)
+                        ,exact.sim=nextdose.exact.sim(alpha,sdose,ff,target.tox,constrain,pointest,current)
+    )
+    ndose <- prior.ndose
+    
+    stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox, simulate)
+    ndose <- stopped$ndose
+
+    results <- list(dose=dose, sdose=sdose, tox=new.tox, notox=new.notox, ndose=list(ndose), constrain=constrain, start=start, target.tox=target.tox, ff=ff, method=method, pointest=pointest, tox.cutpoints=tox.cutpoints, loss=loss, prior.alpha=prior.alpha, data=data)
+    class(results) <- "bcrm"
+    
+    if(plot){
+      plot(results, file)
+    }
+    
+    while(!stopped$stop){
+      current <- ndose[[1]]
+      ncurrent <- ncurrent + cohort
+      
+      interact<-crm.interactive(new.tox, new.notox, ncurrent,
+                                cohort, ndose, dose)
+      if(interact$bk == TRUE){
+        results$data<-newdata
+        return(results)
+      }
+      y <- interact$y
+      new.tox <- interact$tox
+      new.notox <- interact$notox
+      current <- interact$ans
+      
+      currentdata <- data.frame(patient = (ncurrent - cohort+1):ncurrent,
+                                dose = rep(current, cohort),
+                                tox = y)
+      newdata <- rbind(newdata, currentdata)
+      
+      alpha<-switch(method
+                    ,rjags=Posterior.rjags(new.tox, new.notox, sdose, ff, prior.alpha, burnin.itr, production.itr)
+                    ,BRugs=Posterior.BRugs(new.tox, new.notox, sdose, ff, prior.alpha, burnin.itr, production.itr)
+                    ,R2WinBUGS=Posterior.R2WinBUGS(new.tox, new.notox, sdose, ff, prior.alpha, burnin.itr, production.itr,bugs.directory)
+                    ,exact=Posterior.exact(new.tox,new.notox,sdose,ff,prior.alpha)
+                    ,exact.sim=Posterior.exact.sim(new.tox,new.notox,sdose,ff,prior.alpha,pointest)
+      )
+      ndose<-switch(method
+                    ,rjags=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
+                    ,BRugs=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
+                    ,R2WinBUGS=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
+                    ,exact=nextdose.exact(alpha,sdose,ff,target.tox,constrain,pointest,current)
+                    ,exact.sim=nextdose.exact.sim(alpha,sdose,ff,target.tox,constrain,pointest,current)
+      )
+      
+      stopped<-stop.check(stop,ncurrent,ndose,new.tox,new.notox,simulate)
+      ndose<-stopped$ndose ## update ndose in case no doses are deemed safe
+
+      results$tox<-new.tox
+      results$notox<-new.notox
+      results$ndose[[length(results$ndose)+1]]<-ndose
+      results$data<-newdata
+
+      if(plot){
+        plot(results,file)
+      }
+    }
+
+    out <- results
   }
-  
   
   return(out)
 }
@@ -1277,7 +1357,8 @@ print.bcrm <- function(x, ...){
 #-----------------------------------------------------------------------
 #    Print function for an object of class bcrm.sim
 # -----------------------------------
-print.bcrm.sim <- function(x, tox.cutpoints=NULL, trajectories=FALSE, threep3=FALSE, ...){
+print.bcrm.sim <- function(x, tox.cutpoints=NULL, trajectories=FALSE,
+                           threep3=FALSE, ...){
   if(trajectories){
     ## sample size
     n <- sapply(x, function(i){dim(i$data)[1]})
@@ -1303,8 +1384,11 @@ print.bcrm.sim <- function(x, tox.cutpoints=NULL, trajectories=FALSE, threep3=FA
     }
     exp <- sapply(x, function(i){(i$tox+i$notox)/sum(i$tox+i$notox)})
     exp.tab <- c(NA, apply(exp, 1, mean))
-    rec <- sapply(x, function(i){i$ndose[[length(i$ndose)]]$ndose})
+    rec <- sapply(x, function(i){
+      i$ndose[[length(i$ndose)]]$ndose
+      })
     rec.tab <- prop.table(table(factor(rec, levels=0:length(x[[1]]$tox))))
+    
     tab <- signif(rbind(exp.tab, rec.tab), 3)
     rownames(tab) <- c("Experimentation proportion", "Recommendation proportion")
     dose <- if(is.null(x[[1]]$dose)){1:length(x[[1]]$truep)} else {x[[1]]$dose}

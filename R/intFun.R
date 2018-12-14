@@ -1,6 +1,6 @@
 
-intFun <- function(X){
-  attach(sys.frame(sys.parent(2)), 2)
+intFun <- function(){
+  #attach(sys.frame(sys.parent(2)), 2)
   
   ncurrent <- sum(new.tox + new.notox)
   stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox, simulate)
