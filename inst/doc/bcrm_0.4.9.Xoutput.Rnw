@@ -11,7 +11,7 @@
 \definecolor{orange}{rgb}{1,  0.65,  0}
 
 \begin{document}
-\title{The title goes here}
+\title{Output from CRAN bcrm 0.4.7}
 \author{Harry Southworth}
 \maketitle%\thispagestyle{empty}
 \tableofcontents
@@ -23,12 +23,16 @@ the bcrm help file, as installed from CRAN on 2018-12-08. The
 reason is to be able to compare future versions with the
 current CRAN version.
 
+Some of the plots are slightly different (titles and point
+shapes) due to changes to github.com/mikesweeting/bcrm that
+have not been published to CRAN.
+
 Note that one of the examples (with the 3+3 design) failed to
 run through knitr and rmarkdown. Also, there is a final example
 which (on some runs) reveals a bug: there is a systematic
 change in the simulated trials after the 100th.
 
-
+\subsection{Example 1}
 <<run,  echo=TRUE>>=
 startTime <- Sys.time()
 
@@ -68,6 +72,8 @@ print(Power.LN.bcrm)
 plot(Power.LN.bcrm)
 @
 
+\FloatBarrier
+\subsection{Example 2}
 <<second, echo=TRUE>>=
 ## Simulate 10 replicate trials of size 36 (cohort size 3) using this design 
 ## with constraint (i.e. no dose-skipping) and starting at lowest dose
@@ -83,6 +89,8 @@ print(Power.LN.bcrm.sim)
 plot(Power.LN.bcrm.sim)
 @
 
+\FloatBarrier
+\subsection{Example 3}
 \textbf{Note that} in the following example, I set threep3=FALSE
 because otherwise it mysteriously never finishes executing when
 run through knitr or rmarkdown.
@@ -107,10 +115,14 @@ print(Power.LN.bcrm.compare.sim, threep3=FALSE)
 plot(Power.LN.bcrm.compare.sim, threep3=FALSE)
 @
 
+\FloatBarrier
+\subsection{Example 4}
 <<fourth, echo=TRUE>>==
 ## A 2-parameter model,  using priors as specified in Neuenschwander et al 2008.
 ## Posterior mean used to choose the next dose
 ## Standardised doses using reference dose,  250mg
+set.seed(20181214)
+
 sdose <- log(dose/250)
 ## Bivariate lognormal prior for two parameters
 mu <- c(2.15, 0.52)
@@ -127,6 +139,8 @@ print(TwoPLogistic.mean.bcrm)
 plot(TwoPLogistic.mean.bcrm)
 @
 
+\FloatBarrier
+\subsection{Example 5}
 <<fifth, echo=TRUE>>==
 ## A 2-parameter model,  using an EWOC design with feasibility
 ## bound (MTD quantile) 
@@ -143,6 +157,8 @@ print(TwoPLogistic.EWOC0.25.bcrm)
 plot(TwoPLogistic.EWOC0.25.bcrm)
 @
 
+\FloatBarrier
+\subsection{Example 6}
 <<sixth, echo=TRUE>>==
 ## A 2-parameter model,  using a loss function based on
 ## intervals of toxicity to choose the next dose
@@ -164,6 +180,8 @@ print(TwoPLogistic.tox.intervals.bcrm)
 plot(TwoPLogistic.tox.intervals.bcrm)
 @
 
+\FloatBarrier
+\subsection{Example 7}
 <<seventh, echo=TRUE>>==
 ## Greater loss associated with overdosing and unacceptable toxicity
 ## [0, 0.2]=1,  (0.2, 0.35]=0,  (0.35, 0.6]=2,  (0.6, 1]=4
@@ -180,6 +198,8 @@ print(TwoPLogistic.tox.intervals.2.bcrm)
 plot(TwoPLogistic.tox.intervals.2.bcrm)
 @
 
+\FloatBarrier
+\subsection{Example 8}
 <<last, echo=TRUE>>==
 # And a final example, not from the help file, that reveals a bug
 # on some runs

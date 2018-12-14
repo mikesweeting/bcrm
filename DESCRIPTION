@@ -1,8 +1,8 @@
 Package: bcrm
 Type: Package
 Title: Bayesian Continual Reassessment Method for Phase I Dose-Escalation Trials
-Version: 0.4.9.1
-Date: 2018-12-08
+Version: 0.4.9.2
+Date: 2018-12-14
 Authors@R: as.person(c(
     "Michael Sweeting <michael.sweeting@leicester.ac.uk> [aut]", 
     "Graham Wheeler <graham.wheeler@ucl.ac.uk> [aut, cre]"
