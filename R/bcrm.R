@@ -581,8 +581,8 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
     ndose <- prior.ndose
 
     out <- lapply(1:nsims, simFun, stop, ndose, sdose, dose, constrain, start, ff,
-                                  cohort,
-                                  method, pointest, tox.cutpoints, loss,
+                                  cohort, method, pointest, tox.cutpoints, loss,
+                                  burn = burnin.itr, iter = production.itr, quantiles,
                                   prior.alpha, truep, quietly)
     class(out) <- "bcrm.sim"
     if (threep3){

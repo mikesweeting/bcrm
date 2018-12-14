@@ -1,6 +1,6 @@
 simFun <- function(X, stop, ndose, sdose, dose, constrain, start, ff,
-                   cohort,
-                   method, pointest, tox.cutpoints, loss,
+                   cohort, method, pointest, tox.cutpoints, loss,
+                   burn, iter, quantiles,
                    prior.alpha, truep, quietly=10){
 
   k <- length(sdose)
@@ -38,9 +38,9 @@ simFun <- function(X, stop, ndose, sdose, dose, constrain, start, ff,
     newdata <- rbind(newdata, currentdata)
     
     alpha <- switch(method
-                    , rjags=Posterior.rjags(new.tox,  new.notox,  sdose,  ff,  prior.alpha,  burnin.itr,  production.itr)
-                    , BRugs=Posterior.BRugs(new.tox,  new.notox,  sdose,  ff,  prior.alpha,  burnin.itr,  production.itr)
-                    , R2WinBUGS=Posterior.R2WinBUGS(new.tox,  new.notox,  sdose,  ff,  prior.alpha,  burnin.itr,  production.itr, bugs.directory)
+                    , rjags=Posterior.rjags(new.tox,  new.notox,  sdose,  ff,  prior.alpha,  burn,  iter)
+                    , BRugs=Posterior.BRugs(new.tox,  new.notox,  sdose,  ff,  prior.alpha,  burn,  iter)
+                    , R2WinBUGS=Posterior.R2WinBUGS(new.tox,  new.notox,  sdose,  ff,  prior.alpha,  burn, iter, bugs.directory)
                     , exact=Posterior.exact(new.tox, new.notox, sdose, ff, prior.alpha)
                     , exact.sim=Posterior.exact.sim(new.tox, new.notox, sdose, ff, prior.alpha, pointest)
     )

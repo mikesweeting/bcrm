@@ -91,9 +91,9 @@ plot(Power.LN.bcrm.sim)
 
 \FloatBarrier
 \subsection{Example 3}
-\textbf{Note that} in the following example, I set threep3=FALSE
-because otherwise it mysteriously never finishes executing when
-run through knitr or rmarkdown.
+\textbf{Note that} in the following example, threep3=TRUE
+but it won't work in the CRAN version because it prompts for
+a go-ahead and knitr and rmarkdown can't cope with that.
 
 <<third, echo=TRUE>>==
 ## Comparing this CRM design with the standard 3+3 design 
@@ -107,12 +107,10 @@ Power.LN.bcrm.compare.sim <- bcrm(stop=list(nmax=36),
                                   sdose.calculate="median",
                                   pointest="mean", start=1,
                                   simulate=TRUE, nsims=50,
-                                  truep=p.tox0[1:12], threep3=FALSE,
+                                  truep=p.tox0[1:12], threep3=TRUE,
                                   quietly=TRUE)
-#print(Power.LN.bcrm.compare.sim, threep3=TRUE)
-#plot(Power.LN.bcrm.compare.sim, threep3=TRUE)
-print(Power.LN.bcrm.compare.sim, threep3=FALSE)
-plot(Power.LN.bcrm.compare.sim, threep3=FALSE)
+print(Power.LN.bcrm.compare.sim)
+plot(Power.LN.bcrm.compare.sim)
 @
 
 \FloatBarrier
