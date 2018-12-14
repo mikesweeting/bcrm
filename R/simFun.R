@@ -1,15 +1,19 @@
-simFun <- function(X){
-  new.tox <-  rep(0, k)
-  new.notox <- rep(0, k)
+simFun <- function(X, stop, ndose, sdose, constrain, start, ff,
+                   cohort,
+                   method, pointest, tox.cutpoints, loss,
+                   prior.alpha, truep, quietly=10){
+
+  k <- length(sdose)
+  
+  new.tox <- new.notox <- rep(0, k)
   current <- start - 1
   
   ncurrent <- sum(new.tox + new.notox)
   newdata <- data.frame(patient=NULL, dose=NULL, tox=NULL)
   
-  ndose <- prior.ndose
-  
-  stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox, simulate)
-  ndose <- stopped$ndose ## update ndose incase no doses are deemed safe
+  stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox,
+                        simulate = TRUE)
+  ndose <- stopped$ndose ## update ndose in case no doses are deemed safe
   
   results <- list(dose=dose, sdose=sdose, tox=new.tox,
                   notox=new.notox, ndose=list(ndose),
@@ -49,7 +53,8 @@ simFun <- function(X){
                     , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, pointest, current)
     )
     
-    stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox, simulate)
+    stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox,
+                          simulate=TRUE)
     ndose <- stopped$ndose ## update ndose in case no doses are deemed safe
     
     results$tox <- new.tox
@@ -58,9 +63,9 @@ simFun <- function(X){
     results$data <- newdata
   } # Close while
   ## Once stopped run following code
-  if(simulate & !quietly){
+  if(X %% quietly == 0){
     message("Simulated trial: ", X)
   }
-  
+
   results
 } # Close simFun

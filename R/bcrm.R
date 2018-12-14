@@ -259,8 +259,9 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' been entered? Defaults to FALSE.
 #' @param seed Integer defining the state of the random number generator to
 #' allow reproducible results. The default is to not specify a seed.
-#' @param quietly Should the simulation number output be suppressed when
-#' running bcrm?  Defaults to FALSE.
+#' @param quietly How often to send a message back indicating how many
+#'   simulated trials have been performed. Defaults to \code{quietly = 10}
+#'   and the function reports back after every 10th simulation.
 #' @param file File name where the dose-response plots are stored,  in a pdf
 #' format. The program will amend the current sample size to the end of the
 #' file name.
@@ -454,7 +455,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
                  threep3=FALSE, method="exact", burnin.itr=2000,
                  production.itr=2000,
                  bugs.directory="c:/Program Files/WinBUGS14/",
-                 plot=FALSE, seed=NULL,  quietly=FALSE,  file=NULL,
+                 plot=FALSE, seed=NULL,  quietly=10,  file=NULL,
                  N, tox, notox){
   
   # Checks of argument inputs  
@@ -573,7 +574,10 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
     )
     ndose <- prior.ndose
     
-    out <- lapply(1:nsims, simFun)
+    out <- lapply(1:nsims, simFun, stop, ndose, sdose, constrain, start, ff,
+                                  cohort,
+                                  method, pointest, tox.cutpoints, loss,
+                                  prior.alpha, truep, quietly)
     class(out) <- "bcrm.sim"
     if (threep3){
       if(length(truep) > 9){
@@ -664,10 +668,10 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
       if(plot){
         plot(results,file)
       }
-    }
+    } # Close while
 
     out <- results
-  }
+  } # Close else { # not simulating
   
   return(out)
 }
