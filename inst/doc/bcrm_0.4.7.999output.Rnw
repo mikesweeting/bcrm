@@ -11,7 +11,7 @@
 \definecolor{orange}{rgb}{1,  0.65,  0}
 
 \begin{document}
-\title{Output from CRAN bcrm 0.4.7}
+\title{The title goes here}
 \author{Harry Southworth}
 \maketitle%\thispagestyle{empty}
 \tableofcontents
@@ -22,10 +22,6 @@ This document contains the output of running the examples in
 the bcrm help file, as installed from CRAN on 2018-12-08. The
 reason is to be able to compare future versions with the
 current CRAN version.
-
-Some of the plots are slightly different (titles and point
-shapes) due to changes to github.com/mikesweeting/bcrm that
-have not been published to CRAN.
 
 Note that one of the examples (with the 3+3 design) failed to
 run through knitr and rmarkdown. Also, there is a final example
@@ -91,9 +87,9 @@ plot(Power.LN.bcrm.sim)
 
 \FloatBarrier
 \subsection{Example 3}
-\textbf{Note that} in the following example, threep3=TRUE
-but it won't work in the CRAN version because it prompts for
-a go-ahead and knitr and rmarkdown can't cope with that.
+\textbf{Note that} in the following example, I set threep3=FALSE
+because otherwise it mysteriously never finishes executing when
+run through knitr or rmarkdown.
 
 <<third, echo=TRUE>>==
 ## Comparing this CRM design with the standard 3+3 design 
@@ -107,10 +103,12 @@ Power.LN.bcrm.compare.sim <- bcrm(stop=list(nmax=36),
                                   sdose.calculate="median",
                                   pointest="mean", start=1,
                                   simulate=TRUE, nsims=50,
-                                  truep=p.tox0[1:12], threep3=TRUE,
+                                  truep=p.tox0[1:12], threep3=FALSE,
                                   quietly=TRUE)
-print(Power.LN.bcrm.compare.sim)
-plot(Power.LN.bcrm.compare.sim)
+#print(Power.LN.bcrm.compare.sim, threep3=TRUE)
+#plot(Power.LN.bcrm.compare.sim, threep3=TRUE)
+print(Power.LN.bcrm.compare.sim, threep3=FALSE)
+plot(Power.LN.bcrm.compare.sim, threep3=FALSE)
 @
 
 \FloatBarrier
@@ -198,7 +196,7 @@ plot(TwoPLogistic.tox.intervals.2.bcrm)
 
 \FloatBarrier
 \subsection{Example 8}
-<<last, echo=TRUE>>==
+<<eight, echo=TRUE>>==
 # And a final example, not from the help file, that reveals a bug
 # on some runs
 dose <- 1:12
@@ -225,7 +223,6 @@ ggplot(d, aes(index, d)) +
   geom_point(position=position_jitter(height=.1, width=0)) +
   geom_smooth()
 @
-
 
 \FloatBarrier
 \subsection{Example 9}
