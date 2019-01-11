@@ -82,6 +82,7 @@
 #' @param start Starting dose level. Defaults to 1,  i.e. the lowest dose level
 #' @param dose Optional vector of length \code{k} of actual doses for
 #' presentation purposes
+#' @param quietly Whether to report progress. Defaults to \code{quietly = FALSE}.
 #' @return \code{threep3} returns an object of class "threep3". The function
 #' \code{\link{print}} (i.e. \code{\link{print.threep3}}) can be used to obtain
 #' operating characteristics of the design used.
@@ -142,7 +143,7 @@
 #' }
 #' 
 #' @export threep3
-threep3 <- function(truep, start=1, dose=NULL){
+threep3 <- function(truep, start=1, dose=NULL, quietly=FALSE){
   # Check that dose is the same length as truep
   if(!is.null(dose) & length(dose)!=length(truep)) stop("Length of 'dose' must be the same as the length of 'truep'.")
   
@@ -211,7 +212,7 @@ threep3 <- function(truep, start=1, dose=NULL){
   }
   
   for(i in 3:mcplus1){
-    message(paste(round(100*i/mcplus1), "% complete", sep=""))
+    if (!quietly) message(paste(round(100*i/mcplus1), "% complete", sep=""))
     dd <- as.character(paste("d", i))
     td <- as.character(paste("tox", i))
     dc <- as.character(paste("d", i-1))
