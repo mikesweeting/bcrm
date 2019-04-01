@@ -10,12 +10,16 @@
 #             "logit2" - Two-parameter Logistic
 #     target.tox    --> desired probability of event (toxicity)
 #  constrain    --> TRUE or FALSE
+#  first       --> TRUE or FALSE
 #  pointest    --> "plugin",  "mean" or a quantile
 #  current    --> current dose level (of last treated cohort) - 0 if this is first cohort
 # quantiles --> quantiles of the posterior distribution to calculate for each dose
+# only.below --> TRUE or FALSE; if TRUE, only choose largest dose that has estimate below
+#                target (if no dose below target, choose lowest dose level unless stopping
+#                criteria satisfied); otherwise, choose dose level closest to target
 #
 # ----------------------------------------------------------------------
-nextdose <- function(samples.alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles){
+nextdose <- function(samples.alpha, sdose, ff, target.tox, constrain, first, pointest, current, tox.cutpoints, loss, quantiles, only.below){
   f <- which.f(ff)
   k <- length(sdose)
   samples.sdose <- sapply(sdose, function(x){f(x, samples.alpha)})
@@ -28,6 +32,11 @@ nextdose <- function(samples.alpha, sdose, ff, target.tox, constrain, pointest, 
     probs <- sapply(1:k, function(i){hist(samples.sdose[, i],  c(0, tox.cutpoints, 1),  plot = FALSE)$counts/dim(samples.sdose)[1]})
     est <- apply(loss*probs, 2, sum)
     target <- 0
+    # Next dose
+    ndose <- if(!constrain){
+      if(!first){which.min(abs(est-target))}else{min(current+1,k)}
+    } else {which.min(abs(est[1:min(current+1, k)]-target))}
+    
   } else {
     probs <- NULL
     if(pointest=="plugin"){
@@ -43,11 +52,20 @@ nextdose <- function(samples.alpha, sdose, ff, target.tox, constrain, pointest, 
     est <- if(pointest=="plugin"){ f(sdose, mean.alpha)
     } else {if(pointest=="mean"){apply(samples.sdose, 2, mean)
     } else { sdose }}
-  }
-  # Next dose
-  ndose <- if(!constrain){which.min(abs(est-target))
-  } else {which.min(abs(est[1:min(current+1, k)]-target))}
   
+  # Next dose
+  est.below<-est[which(est<=target)]
+  ndose <- if(only.below==FALSE){if(!constrain){
+    if(!first){which.min(abs(est-target))}else{min(current+1,k)}
+  } else {which.min(abs(est[1:min(current+1, k)]-target))}
+  }else{
+    if(length(est.below)==0){1}else{
+    if(!constrain){
+      if(!first){which.min(abs(est.below-target))}else{min(current+1,k)}
+    } else {which.min(abs(est.below[1:min(current+1, k)]-target))}}
+    
+  }
+  }
   return(list(ndose=ndose, est=est, mean=mean, sd=sd, quantiles=quantiles, target=target, probs=probs))
 }
 
@@ -64,11 +82,15 @@ nextdose <- function(samples.alpha, sdose, ff, target.tox, constrain, pointest, 
 #         "logit2" - Two-parameter Logistic
 #     target.tox    --> desired probability of event (toxicity)
 #  constrain    --> TRUE or FALSE
+#  first       --> TRUE or FALSE
 #  pointest    --> "mean" or "plugin"
 #  current    --> current dose level (of last treated cohort) - 0 if this is first cohort
+# only.below --> TRUE or FALSE; if TRUE, only choose largest dose that has estimate below
+#                target (if no dose below target, choose lowest dose level unless stopping
+#                criteria satisfied); otherwise, choose dose level closest to target
 #
 # ----------------------------------------------------------------------
-nextdose.exact <- function(alpha, sdose, ff, target.tox, constrain, pointest, current){
+nextdose.exact <- function(alpha, sdose, ff, target.tox, constrain, first, pointest, current, only.below){
   f <- which.f(ff)
   k <- length(sdose)
   est <- if(pointest=="mean") alpha$dose.mean
@@ -77,8 +99,17 @@ nextdose.exact <- function(alpha, sdose, ff, target.tox, constrain, pointest, cu
   mean <- alpha$dose.mean
   sd <- alpha$dose.sd
   quantiles <- alpha$dose.quantiles
-  ndose <- if(!constrain){which.min(abs(est-target.tox))
+  est.below<-est[which(est<=target.tox)]
+  ndose <- if(only.below==FALSE){if(!constrain){
+    if(!first){which.min(abs(est-target.tox))}else{min(current+1,k)}
   } else {which.min(abs(est[1:min(current+1, k)]-target.tox))}
+  }else{
+    if(length(est.below)==0){1}else{
+      if(!constrain){
+        if(!first){which.min(abs(est.below-target.tox))}else{min(current+1,k)}
+      } else {which.min(abs(est.below[1:min(current+1, k)]-target.tox))}}
+    
+  }
   return(list(ndose=ndose, est=est, mean=mean, sd=sd, quantiles=quantiles))
 }
 
@@ -94,18 +125,31 @@ nextdose.exact <- function(alpha, sdose, ff, target.tox, constrain, pointest, cu
 #         "logit2" - Two-parameter Logistic
 #     target.tox    --> desired probability of event (toxicity)
 #  constrain    --> TRUE or FALSE
+#  first       --> TRUE or FALSE
 #  pointest    --> "mean" or "plugin"
 #  current    --> current dose level (of last treated cohort) - 0 if this is first cohort
+# only.below --> TRUE or FALSE; if TRUE, only choose largest dose that has estimate below
+#                target (if no dose below target, choose lowest dose level unless stopping
+#                criteria satisfied); otherwise, choose dose level closest to target
 #
 # ----------------------------------------------------------------------
-nextdose.exact.sim <- function(alpha, sdose, ff, target.tox, constrain, pointest, current){
+nextdose.exact.sim <- function(alpha, sdose, ff, target.tox, constrain, first, pointest, current, only.below){
   f <- which.f(ff)
   k <- length(sdose)
   est <- if(pointest=="mean") alpha$dose.mean
   else if(pointest=="plugin") f(sdose, alpha$alpha.mean)
   else stop("Quantile estimation not available for exact computation,  please use pointest='mean' or 'plugin'")
-  ndose <- if(!constrain){which.min(abs(est-target.tox))
+  est.below<-est[which(est<=target.tox)]
+  ndose <- if(only.below==FALSE){if(!constrain){
+    if(!first){which.min(abs(est-target.tox))}else{min(current+1,k)}
   } else {which.min(abs(est[1:min(current+1, k)]-target.tox))}
+  }else{
+    if(length(est.below)==0){1}else{
+      if(!constrain){
+        if(!first){which.min(abs(est.below-target.tox))}else{min(current+1,k)}
+      } else {which.min(abs(est.below[1:min(current+1, k)]-target.tox))}}
+    
+  }
   return(list(ndose=ndose, est=est))
 }
 
@@ -156,9 +200,7 @@ which.f  <-  function( ff ) {
 #' Cambridge,  UK),  drawing on code originally developed by J. Jack Lee and Nan
 #' Chen,  Department of Biostatistics,  the University of Texas M. D. Anderson
 #' Cancer Center
-#' @seealso \code{\link{bcrm}},  \code{\link{getprior}}, 
-#' \code{\link{Posterior.exact}},  \code{\link{Posterior.BRugs}}, 
-#' \code{\link{Posterior.R2WinBUGS}}
+#' @seealso \code{\link{bcrm}},  \code{\link{getprior}},  \code{\link{Posterior.exact}},  \code{\link{Posterior.BRugs}},  \code{\link{Posterior.R2WinBUGS}}
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
@@ -170,8 +212,8 @@ which.f  <-  function( ff ) {
 #' dose <- c(1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250)
 #' ## Pre-specified probabilities of toxicity
 #' ## [dose levels 11-15 not specified in the paper,  and are for illustration only]
-#' p.tox0 <- c(0.010, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050, 0.100, 0.170, 0.300, 0.400, 0.500, 0.650
-#'   , 0.800, 0.900)
+#' p.tox0 <- c(0.010, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050,
+#'   0.100, 0.170, 0.300, 0.400, 0.500, 0.650, 0.800, 0.900)
 #' ## Data from the first 5 cohorts of 18 patients
 #' tox <- c(0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0)
 #' notox <- c(3, 4, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)

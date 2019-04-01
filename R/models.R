@@ -115,7 +115,8 @@ PowerLogNormal <- function(){
 TwoPLogisticLogNormal <- function(){
   for (i in 1:N1){
     s[i] ~ dbin(p[i],  n[i])    
-    logit(p[i])  <-  log.alpha[1] + alpha[2] * d[i]
+    p[i] <- l.pred[i]/(1 + l.pred[i])
+    l.pred[i] <- alpha[1]*exp(alpha[2] * d[i])
   }
   alpha[1] <- exp(log.alpha[1])
   alpha[2] <- exp(log.alpha[2])

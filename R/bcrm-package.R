@@ -1,5 +1,3 @@
-
-
 #' Bayesian Continual Reassessment Method for Phase I Dose-Escalation Trials
 #' 
 #' Implements a wide variety of Bayesian CRM designs. The program can run
@@ -113,7 +111,3 @@ NULL
 #' 	hist(post.BRugs)
 #' 	}
 #' 
-NULL
-
-
-

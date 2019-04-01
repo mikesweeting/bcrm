@@ -1,13 +1,13 @@
 simFun <- function(X, stop, ndose, sdose, dose, constrain, start, ff,
                    cohort, method, pointest, tox.cutpoints, loss,
                    burn, iter, quantiles,
-                   prior.alpha, truep, quietly=10){
+                   prior.alpha, truep, only.below, quietly=10, bugs.directory){
 
   k <- length(sdose)
   
   new.tox <- new.notox <- rep(0, k)
   current <- start - 1
-  
+  first<-FALSE
   ncurrent <- sum(new.tox + new.notox)
   newdata <- data.frame(patient=NULL, dose=NULL, tox=NULL)
   
@@ -22,7 +22,7 @@ simFun <- function(X, stop, ndose, sdose, dose, constrain, start, ff,
                   method=method, pointest=pointest,
                   tox.cutpoints=tox.cutpoints,
                   loss=loss, prior.alpha=prior.alpha,
-                  truep=truep)
+                  truep=truep, only.below=only.below)
   
   while(!stopped$stop){
     current <- ndose[[1]]
@@ -46,11 +46,11 @@ simFun <- function(X, stop, ndose, sdose, dose, constrain, start, ff,
     )
     
     ndose <- switch(method
-                    , rjags=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-                    , BRugs=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-                    , R2WinBUGS=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-                    , exact=nextdose.exact(alpha, sdose, ff, target.tox, constrain, pointest, current)
-                    , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, pointest, current)
+                    , rjags=nextdose(alpha, sdose, ff, target.tox, constrain, first, pointest, current, tox.cutpoints, loss, quantiles, only.below)
+                    , BRugs=nextdose(alpha, sdose, ff, target.tox, constrain, first, pointest, current, tox.cutpoints, loss, quantiles, only.below)
+                    , R2WinBUGS=nextdose(alpha, sdose, ff, target.tox, constrain, first, pointest, current, tox.cutpoints, loss, quantiles, only.below)
+                    , exact=nextdose.exact(alpha, sdose, ff, target.tox, constrain, first, pointest, current, only.below)
+                    , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, first, pointest, current, only.below)
     )
     
     stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox,

@@ -6,13 +6,12 @@
 \title{Print information regarding a trial conducted using the Bayesian continuous
 reassessment method}
 \usage{
-\method{print}{bcrm}(x, ...)
+\method{print}{bcrm}(x, tox.cutpoints = NULL, trajectories = FALSE,
+  threep3 = FALSE, ...)
 }
 \arguments{
 \item{x}{An object of class "bcrm" or "bcrm.sim" as returned by
 \code{\link{bcrm}}}
-
-\item{...}{Further arguments passed to or from other methods}
 
 \item{tox.cutpoints}{An optional argument passed to \code{print.bcrm.sim}
 specifying the cutpoints of toxicity for which the operating characteristics
@@ -24,6 +23,8 @@ trajectories be returned? Defaults to FALSE.}
 \item{threep3}{Should operating characteristics of a standard 3+3 rule-based
 design be displayed alongside those from the \code{bcrm} design? Defaults to
 \code{FALSE}.}
+
+\item{...}{Further arguments passed to or from other methods}
 }
 \value{
 The following two components are returned from

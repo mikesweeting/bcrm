@@ -12,6 +12,7 @@
 #    
 # ----------------------------------------------------------------------
 
+
 #' Samples from the specified prior distribution.
 #' 
 #' A sample of specified size is obtained from the prior distribution.
@@ -43,6 +44,9 @@
 #' samples.alpha <- getprior(prior.alpha, 2000)
 #' hist(samples.alpha)
 #' 
+#' @import stats
+#' @import graphics
+#' @import mvtnorm
 #' @export getprior
 getprior  <-  function(prior.alpha,  n) {
   type  <-  prior.alpha[[1]]
@@ -65,7 +69,7 @@ getprior  <-  function(prior.alpha,  n) {
 }
 
 # ----------------------------------------------------------------------
-#     returns the vector containing sampled data from winbug
+#     Returns the vector containing sampled data from JAGS
 #
 #     tox         --> number of successes (toxicities)
 #     notox       --> number of failed patients (no-toxicities)
@@ -79,6 +83,76 @@ getprior  <-  function(prior.alpha,  n) {
 #     burnin.itr  --> number of burn-in (adaptive) iterations
 #     production.itr --> number of production iterations
 # ----------------------------------------------------------------------
+
+#' Returns samples from the posterior distributions of each model parameter using JAGS.
+#' 
+#' If \code{ff = "logit2"} (i.e. a two-parameter logistic model is used), a matrix of dimensions
+#' \code{production.itr}-by-2 is returned (the first and second columns containing the posterior samples for the
+#' intercept and slope parameters respectively). Otherwise, a vector of length \code{production.itr}
+#' is returned.
+#' 
+#' @param tox A vector of length \code{k} showing the number of patient who had toxicities at each dose level
+#' @param notox A vector of length \code{k} showing the number of patients who did not have toxicities at each dose level
+#' @param sdose A vector of length \code{k} listing the standardised doses to
+#' be used in the CRM model.
+#' @param ff A string indicating the functional form of the dose-response
+#' curve. Options are \describe{ \item{ht}{ 1-parameter hyperbolic tangent}
+#' \item{logit1}{ 1-parameter logistic} \item{power}{ 1-parameter power}
+#' \item{logit2}{ 2-parameter logistic} }
+#' @param prior.alpha A list of length 3 containing the distributional
+#' information for the prior. The first element is a number from 1-4 specifying
+#' the type of distribution. Options are \enumerate{ \item Gamma(a, b),  where
+#' a=shape,  b=scale: mean=a*b,  variance=a*b*b \item Uniform(a, b),  where a=min, 
+#' b=max \item Lognormal(a, b),  where a=mean on the log scale,  b=variance on the
+#' log scale \item Bivariate Lognormal(a, b),  where a=mean vector on the log
+#' scale,  b=Variance-covariance matrix on the log scale. This prior should be
+#' used only in conjunction with a two-parameter logistic model.  } The second
+#' and third elements of the list are the parameters a and b,  respectively.
+#' @param burnin.itr Number of burn-in iterations (default 2000).
+#' @param production.itr Number of production iterations (default 2000).
+#' 
+#' @author Michael Sweeting \email{mjs212@@medschl.cam.ac.uk} (University of
+#' Cambridge,  UK),  drawing on code originally developed by J. Jack Lee and Nan
+#' Chen,  Department of Biostatistics,  the University of Texas M. D. Anderson
+#' Cancer Center
+#' @seealso \code{\link{bcrm}},  \code{\link{find.x}}
+#' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
+#' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
+#' of Statistical Software} (2013) 54: 1--26.
+#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' @examples
+#' 
+#' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.
+#' ## Pre-defined doses
+#' dose <- c(1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250)
+#' ## Pre-specified probabilities of toxicity
+#' ## [dose levels 11-15 not specified in the paper,  and are for illustration only]
+#' p.tox0 <- c(0.010, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050,
+#'   0.100, 0.170, 0.300, 0.400, 0.500, 0.650, 0.800, 0.900)
+#' ## Data from the first 5 cohorts of 18 patients
+#' tox <- c(0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0)
+#' notox <- c(3, 4, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' ## Target toxicity level
+#' target.tox <- 0.30
+#' 
+#' ## Prior distribution for the MTD given a lognormal(0, 1.34^2) distribution for alpha
+#' ## and a power model functional form
+#' prior.alpha <- list(3, 0, 1.34^2)
+#' ff <- "power"
+#' samples.alpha <- getprior(prior.alpha, 2000)
+#' mtd <- find.x(ff, target.tox, alpha=samples.alpha)
+#' hist(mtd)
+#' 
+#' ## Standardised doses
+#' sdose <- find.x(ff, p.tox0, alpha=1)
+#' 
+#' ## Posterior distribution of the MTD (on standardised dose scale) using data 
+#' ## from the cancer trial described in Neuenschwander et al 2008.
+#' ## Using rjags
+#' posterior.samples <- Posterior.rjags(tox, notox, sdose, ff, prior.alpha
+#'   , burnin.itr=2000, production.itr=2000)
+#' 
+#' @export Posterior.rjags
 Posterior.rjags  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,  production.itr)
 {    
   all.patient  <-  tox + notox
@@ -145,7 +219,7 @@ Posterior.rjags  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
 }
 
 # ----------------------------------------------------------------------
-#     returns the vector containing sampled data from winbug
+#     returns the vector containing sampled data from OpenBUGS
 #
 #     tox         --> number of successes (toxicities)
 #     notox       --> number of failed patients (no-toxicities)
@@ -159,6 +233,76 @@ Posterior.rjags  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
 #     burnin.itr  --> number of burn-in iterations
 #     production.itr --> number of production iterations
 # ----------------------------------------------------------------------
+#' Returns samples from the posterior distributions of each model parameter using OpenBUGS.
+#' 
+#' If \code{ff = "logit2"} (i.e. a two-parameter logistic model is used), a matrix of dimensions
+#' \code{production.itr}-by-2 is returned (the first and second columns containing the posterior samples for the
+#' intercept and slope parameters respectively). Otherwise, a vector of length \code{production.itr}
+#' is returned.
+#' 
+#' @param tox A vector of length \code{k} showing the number of patient who had toxicities at each dose level
+#' @param notox A vector of length \code{k} showing the number of patients who did not have toxicities at each dose level
+#' @param sdose A vector of length \code{k} listing the standardised doses to
+#' be used in the CRM model.
+#' @param ff A string indicating the functional form of the dose-response
+#' curve. Options are \describe{ \item{ht}{ 1-parameter hyperbolic tangent}
+#' \item{logit1}{ 1-parameter logistic} \item{power}{ 1-parameter power}
+#' \item{logit2}{ 2-parameter logistic} }
+#' @param prior.alpha A list of length 3 containing the distributional
+#' information for the prior. The first element is a number from 1-4 specifying
+#' the type of distribution. Options are \enumerate{ \item Gamma(a, b),  where
+#' a=shape,  b=scale: mean=a*b,  variance=a*b*b \item Uniform(a, b),  where a=min, 
+#' b=max \item Lognormal(a, b),  where a=mean on the log scale,  b=variance on the
+#' log scale \item Bivariate Lognormal(a, b),  where a=mean vector on the log
+#' scale,  b=Variance-covariance matrix on the log scale. This prior should be
+#' used only in conjunction with a two-parameter logistic model.  } The second
+#' and third elements of the list are the parameters a and b,  respectively.
+#' @param burnin.itr Number of burn-in iterations (default 2000).
+#' @param production.itr Number of production iterations (default 2000).
+#' 
+#' @author Michael Sweeting \email{mjs212@@medschl.cam.ac.uk} (University of
+#' Cambridge,  UK),  drawing on code originally developed by J. Jack Lee and Nan
+#' Chen,  Department of Biostatistics,  the University of Texas M. D. Anderson
+#' Cancer Center
+#' @seealso \code{\link{bcrm}},  \code{\link{find.x}}
+#' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
+#' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
+#' of Statistical Software} (2013) 54: 1--26.
+#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' @examples
+#' 
+#' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.
+#' ## Pre-defined doses
+#' dose <- c(1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250)
+#' ## Pre-specified probabilities of toxicity
+#' ## [dose levels 11-15 not specified in the paper,  and are for illustration only]
+#' p.tox0 <- c(0.010, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050,
+#'   0.100, 0.170, 0.300, 0.400, 0.500, 0.650, 0.800, 0.900)
+#' ## Data from the first 5 cohorts of 18 patients
+#' tox <- c(0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0)
+#' notox <- c(3, 4, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' ## Target toxicity level
+#' target.tox <- 0.30
+#' 
+#' ## Prior distribution for the MTD given a lognormal(0, 1.34^2) distribution for alpha
+#' ## and a power model functional form
+#' prior.alpha <- list(3, 0, 1.34^2)
+#' ff <- "power"
+#' samples.alpha <- getprior(prior.alpha, 2000)
+#' mtd <- find.x(ff, target.tox, alpha=samples.alpha)
+#' hist(mtd)
+#' 
+#' ## Standardised doses
+#' sdose <- find.x(ff, p.tox0, alpha=1)
+#' 
+#' ## Posterior distribution of the MTD (on standardised dose scale) using data 
+#' ## from the cancer trial described in Neuenschwander et al 2008.
+#' ## Using BRugs
+#' posterior.samples <- Posterior.BRugs(tox, notox, sdose, ff, prior.alpha
+#'   , burnin.itr=2000, production.itr=2000)
+#' 
+#' @export Posterior.BRugs
+
 Posterior.BRugs  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,  production.itr)
 {    
   all.patient  <-  tox + notox
@@ -223,7 +367,7 @@ Posterior.BRugs  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
 }
 
 # ----------------------------------------------------------------------
-#     returns the vector containing sampled data from winbug
+#     returns the vector containing sampled data from WinBUGS
 #
 #     tox         --> number of successes (toxicities)
 #     notox       --> number of failed patients (no-toxicities)
@@ -238,6 +382,76 @@ Posterior.BRugs  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
 #     production.itr --> number of production iterations
 #   bugs.directory --> directory that contains the WinBUGS executable,  defaults to C:/Program Files/WinBUGS14/
 # ----------------------------------------------------------------------
+#' Returns samples from the posterior distributions of each model parameter using WinBUGS
+#' 
+#' If \code{ff = "logit2"} (i.e. a two-parameter logistic model is used), a matrix of dimensions
+#' \code{production.itr}-by-2 is returned (the first and second columns containing the posterior samples for the
+#' intercept and slope parameters respectively). Otherwise, a vector of length \code{production.itr}
+#' is returned.
+#' 
+#' @param tox A vector of length \code{k} showing the number of patient who had toxicities at each dose level
+#' @param notox A vector of length \code{k} showing the number of patients who did not have toxicities at each dose level
+#' @param sdose A vector of length \code{k} listing the standardised doses to
+#' be used in the CRM model.
+#' @param ff A string indicating the functional form of the dose-response
+#' curve. Options are \describe{ \item{ht}{ 1-parameter hyperbolic tangent}
+#' \item{logit1}{ 1-parameter logistic} \item{power}{ 1-parameter power}
+#' \item{logit2}{ 2-parameter logistic} }
+#' @param prior.alpha A list of length 3 containing the distributional
+#' information for the prior. The first element is a number from 1-4 specifying
+#' the type of distribution. Options are \enumerate{ \item Gamma(a, b),  where
+#' a=shape,  b=scale: mean=a*b,  variance=a*b*b \item Uniform(a, b),  where a=min, 
+#' b=max \item Lognormal(a, b),  where a=mean on the log scale,  b=variance on the
+#' log scale \item Bivariate Lognormal(a, b),  where a=mean vector on the log
+#' scale,  b=Variance-covariance matrix on the log scale. This prior should be
+#' used only in conjunction with a two-parameter logistic model.  } The second
+#' and third elements of the list are the parameters a and b,  respectively.
+#' @param burnin.itr Number of burn-in iterations (default 2000).
+#' @param production.itr Number of production iterations (default 2000).
+#' @param bugs.directory directory that contains the WinBUGS executable,  defaults to C:/Program Files/WinBUGS14/
+#' 
+#' @author Michael Sweeting \email{mjs212@@medschl.cam.ac.uk} (University of
+#' Cambridge,  UK),  drawing on code originally developed by J. Jack Lee and Nan
+#' Chen,  Department of Biostatistics,  the University of Texas M. D. Anderson
+#' Cancer Center
+#' @seealso \code{\link{bcrm}},  \code{\link{find.x}}
+#' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
+#' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
+#' of Statistical Software} (2013) 54: 1--26.
+#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' @examples
+#' 
+#' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.
+#' ## Pre-defined doses
+#' dose <- c(1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250)
+#' ## Pre-specified probabilities of toxicity
+#' ## [dose levels 11-15 not specified in the paper,  and are for illustration only]
+#' p.tox0 <- c(0.010, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050,
+#'   0.100, 0.170, 0.300, 0.400, 0.500, 0.650, 0.800, 0.900)
+#' ## Data from the first 5 cohorts of 18 patients
+#' tox <- c(0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0)
+#' notox <- c(3, 4, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' ## Target toxicity level
+#' target.tox <- 0.30
+#' 
+#' ## Prior distribution for the MTD given a lognormal(0, 1.34^2) distribution for alpha
+#' ## and a power model functional form
+#' prior.alpha <- list(3, 0, 1.34^2)
+#' ff <- "power"
+#' samples.alpha <- getprior(prior.alpha, 2000)
+#' mtd <- find.x(ff, target.tox, alpha=samples.alpha)
+#' hist(mtd)
+#' 
+#' ## Standardised doses
+#' sdose <- find.x(ff, p.tox0, alpha=1)
+#' 
+#' ## Posterior distribution of the MTD (on standardised dose scale) using data 
+#' ## from the cancer trial described in Neuenschwander et al 2008.
+#' ## Using R2WinBUGS
+#' posterior.samples <- Posterior.R2WinBUGS(tox, notox, sdose, ff, prior.alpha
+#'   , burnin.itr=2000, production.itr=2000, bugs.directory = "C:/Program Files (x86)/WinBUGS14/")
+#' 
+#' @export Posterior.R2WinBUGS
 Posterior.R2WinBUGS  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,  production.itr, bugs.directory)
 {    
   all.patient  <-  tox + notox
@@ -320,6 +534,66 @@ Posterior.R2WinBUGS  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.
 #         "logit2" - Two-parameter logistic
 #     prior.alpha  --> list of prior distribution information for parameter alpha
 # ----------------------------------------------------------------------
+#' Returns posterior mean parameter value and summaries of distributions for probability of DLT at each dose level
+#' 
+#' @param tox A vector of length \code{k} showing the number of patient who had toxicities at each dose level
+#' @param notox A vector of length \code{k} showing the number of patients who did not have toxicities at each dose level
+#' @param sdose A vector of length \code{k} listing the standardised doses to
+#' be used in the CRM model.
+#' @param ff A string indicating the functional form of the dose-response
+#' curve. Options are \describe{ \item{ht}{ 1-parameter hyperbolic tangent}
+#' \item{logit1}{ 1-parameter logistic} \item{power}{ 1-parameter power}
+#' \item{logit2}{ 2-parameter logistic} }
+#' @param prior.alpha A list of length 3 containing the distributional
+#' information for the prior. The first element is a number from 1-4 specifying
+#' the type of distribution. Options are \enumerate{ \item Gamma(a, b),  where
+#' a=shape,  b=scale: mean=a*b,  variance=a*b*b \item Uniform(a, b),  where a=min, 
+#' b=max \item Lognormal(a, b),  where a=mean on the log scale,  b=variance on the
+#' log scale \item Bivariate Lognormal(a, b),  where a=mean vector on the log
+#' scale,  b=Variance-covariance matrix on the log scale. This prior should be
+#' used only in conjunction with a two-parameter logistic model.  } The second
+#' and third elements of the list are the parameters a and b,  respectively.
+#' 
+#' @author Michael Sweeting \email{mjs212@@medschl.cam.ac.uk} (University of
+#' Cambridge,  UK),  drawing on code originally developed by J. Jack Lee and Nan
+#' Chen,  Department of Biostatistics,  the University of Texas M. D. Anderson
+#' Cancer Center
+#' @seealso \code{\link{bcrm}},  \code{\link{find.x}}
+#' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
+#' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
+#' of Statistical Software} (2013) 54: 1--26.
+#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' @examples
+#' 
+#' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.
+#' ## Pre-defined doses
+#' dose <- c(1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250)
+#' ## Pre-specified probabilities of toxicity
+#' ## [dose levels 11-15 not specified in the paper,  and are for illustration only]
+#' p.tox0 <- c(0.010, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050,
+#'   0.100, 0.170, 0.300, 0.400, 0.500, 0.650, 0.800, 0.900)
+#' ## Data from the first 5 cohorts of 18 patients
+#' tox <- c(0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0)
+#' notox <- c(3, 4, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' ## Target toxicity level
+#' target.tox <- 0.30
+#' 
+#' ## Prior distribution for the MTD given a lognormal(0, 1.34^2) distribution for alpha
+#' ## and a power model functional form
+#' prior.alpha <- list(3, 0, 1.34^2)
+#' ff <- "power"
+#' samples.alpha <- getprior(prior.alpha, 2000)
+#' mtd <- find.x(ff, target.tox, alpha=samples.alpha)
+#' hist(mtd)
+#' 
+#' ## Standardised doses
+#' sdose <- find.x(ff, p.tox0, alpha=1)
+#' 
+#' ## Posterior distribution of the MTD (on standardised dose scale) using data 
+#' ## from the cancer trial described in Neuenschwander et al 2008.
+#' posterior.samples <- Posterior.exact(tox, notox, sdose, ff, prior.alpha)
+#' 
+#' @export Posterior.exact
 Posterior.exact <- function(tox, notox, sdose, ff, prior.alpha){    
   all.patient  <-  tox + notox
   data.tox  <- tox[all.patient!=0]
@@ -428,6 +702,76 @@ Posterior.exact <- function(tox, notox, sdose, ff, prior.alpha){
 #     prior.alpha  --> list of prior distribution information for parameter alpha
 #   pointest   --> Which summary estimate of the posterior distribution should be used to choose next dose,  "plugin" (default),  "mean" or a numerical quantile between 0 and 1 (e.g. 0.5). If NULL then escalation based on posterior intervals (Loss function approach) is assumed
 # ----------------------------------------------------------------------
+#' Returns posterior mean parameter value and summaries of distributions for probability of DLT at each dose level
+#' 
+#' @param tox A vector of length \code{k} showing the number of patient who had toxicities at each dose level
+#' @param notox A vector of length \code{k} showing the number of patients who did not have toxicities at each dose level
+#' @param sdose A vector of length \code{k} listing the standardised doses to
+#' be used in the CRM model.
+#' @param ff A string indicating the functional form of the dose-response
+#' curve. Options are \describe{ \item{ht}{ 1-parameter hyperbolic tangent}
+#' \item{logit1}{ 1-parameter logistic} \item{power}{ 1-parameter power}
+#' \item{logit2}{ 2-parameter logistic} }
+#' @param prior.alpha A list of length 3 containing the distributional
+#' information for the prior. The first element is a number from 1-4 specifying
+#' the type of distribution. Options are \enumerate{ \item Gamma(a, b),  where
+#' a=shape,  b=scale: mean=a*b,  variance=a*b*b \item Uniform(a, b),  where a=min, 
+#' b=max \item Lognormal(a, b),  where a=mean on the log scale,  b=variance on the
+#' log scale \item Bivariate Lognormal(a, b),  where a=mean vector on the log
+#' scale,  b=Variance-covariance matrix on the log scale. This prior should be
+#' used only in conjunction with a two-parameter logistic model.  } The second
+#' and third elements of the list are the parameters a and b,  respectively.
+#' @param pointest Which summary estimate of the posterior distribution should
+#' be used to choose the next dose. Options are \code{"plugin"} (default) where
+#' the posterior mean of the model parameter(s) is plugged into the function
+#' form to obtain estimates of toxicity,  or \code{"mean"} where the posterior
+#' mean probabilities of toxicity are directly used. Alternatively,  a number
+#' between 0 and 1 can be specified representing the quantile of the maximum
+#' tolerated dose (MTD) posterior distribution (e.g. 0.5 specifies the
+#' posterior median). This produces an Escalation With Overdose Control (EWOC)
+#' design if the quantile is less than 0.5 (see details). Currently,  EWOC
+#' designs must be fit using MCMC methods.
+#'  
+#' @author Michael Sweeting \email{mjs212@@medschl.cam.ac.uk} (University of
+#' Cambridge,  UK),  drawing on code originally developed by J. Jack Lee and Nan
+#' Chen,  Department of Biostatistics,  the University of Texas M. D. Anderson
+#' Cancer Center
+#' @seealso \code{\link{bcrm}},  \code{\link{find.x}}
+#' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
+#' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
+#' of Statistical Software} (2013) 54: 1--26.
+#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' @examples
+#' 
+#' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.
+#' ## Pre-defined doses
+#' dose <- c(1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250)
+#' ## Pre-specified probabilities of toxicity
+#' ## [dose levels 11-15 not specified in the paper,  and are for illustration only]
+#' p.tox0 <- c(0.010, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050,
+#'   0.100, 0.170, 0.300, 0.400, 0.500, 0.650, 0.800, 0.900)
+#' ## Data from the first 5 cohorts of 18 patients
+#' tox <- c(0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0)
+#' notox <- c(3, 4, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' ## Target toxicity level
+#' target.tox <- 0.30
+#' 
+#' ## Prior distribution for the MTD given a lognormal(0, 1.34^2) distribution for alpha
+#' ## and a power model functional form
+#' prior.alpha <- list(3, 0, 1.34^2)
+#' ff <- "power"
+#' samples.alpha <- getprior(prior.alpha, 2000)
+#' mtd <- find.x(ff, target.tox, alpha=samples.alpha)
+#' hist(mtd)
+#' 
+#' ## Standardised doses
+#' sdose <- find.x(ff, p.tox0, alpha=1)
+#' point.est <- "plugin"
+#' ## Posterior distribution of the MTD (on standardised dose scale) using data 
+#' ## from the cancer trial described in Neuenschwander et al 2008.
+#' posterior.samples <- Posterior.exact.sim(tox, notox, sdose, ff, prior.alpha, point.est)
+#' 
+#' @export Posterior.exact.sim
 Posterior.exact.sim <- function(tox, notox, sdose, ff, prior.alpha, pointest){    
   
   all.patient  <-  tox + notox

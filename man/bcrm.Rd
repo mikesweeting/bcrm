@@ -7,12 +7,13 @@
 bcrm(stop = list(nmax = NULL, nmtd = NULL, precision = NULL, nmin = NULL,
   safety = NULL), data = NULL, p.tox0 = NULL, sdose = NULL,
   dose = NULL, ff, prior.alpha, cohort = 3, target.tox,
-  constrain = TRUE, sdose.calculate = "mean", pointest = "plugin",
-  tox.cutpoints = NULL, loss = NULL, start = NULL,
-  simulate = FALSE, nsims = 1, truep = NULL, threep3 = FALSE,
+  constrain = TRUE, only.below = FALSE, sdose.calculate = "mean",
+  pointest = "plugin", tox.cutpoints = NULL, loss = NULL,
+  start = NULL, simulate = FALSE, nsims = 1, truep = NULL,
+  threep3 = FALSE, threep3.start = 1, threep3.esc.only = FALSE,
   method = "exact", burnin.itr = 2000, production.itr = 2000,
   bugs.directory = "c:/Program Files/WinBUGS14/", plot = FALSE,
-  seed = NULL, quietly = FALSE, file = NULL, N, tox, notox)
+  seed = NULL, quietly = 10, file = NULL, N, tox, notox)
 }
 \arguments{
 \item{stop}{A list of stopping rules for the trial. One or more of the
@@ -71,7 +72,14 @@ recruited to the trial. Defaults to 3}
 \item{target.tox}{The target toxicity probability. Defaults to 1/3.}
 
 \item{constrain}{Should a dose-skipping constraint be placed on the
-escalation procedure,  as imposed by a modified CRM? Defaults to TRUE.}
+escalation procedure, as imposed by a modified CRM? Defaults to TRUE.}
+
+\item{only.below}{Should the dose chosen for the next patient be that with
+the largest risk of DLT that is not greater than the target (TRUE), or the
+dose that is closest to the target (FALSE); defaults to FALSE. If TRUE, and no
+dose has risk of DLT below or equal to target, the dose chosen will be the lowest
+dose level UNLESS one of the pre-defined stopping criteria is satisfied.
+NOTE: \code{only.below} applies when \code{loss = NULL}.}
 
 \item{sdose.calculate}{What plug-in estimate of the prior alpha should be
 used to calculate the standardised doses? Options are \code{"mean"}
@@ -96,9 +104,9 @@ Underdosing [0, 0.2],  Target dosing (0.2,  0.35],  Excessive toxicity (0.35,
 
 \item{loss}{A vector of length \code{length(tox.cutpoints)+1} specifying the
 losses associated with each toxicity interval,  e.g. Underdosing = 1,  Target
-dosing =0,  Excessive toxicity=1,  Unacceptable toxicity=2}
+dosing = 0,  Excessive toxicity = 1,  Unacceptable toxicity = 2.}
 
-\item{start}{Dose level used at the beginning of the trial. Required if
+\item{start}{Dose level to be used at the beginning of the trial. Required if
 \code{constrain=TRUE}.}
 
 \item{simulate}{Should a simulation be conducted to assess operating
@@ -118,6 +126,10 @@ design be calculated,  for comparison with \code{bcrm} design? Defaults to
 \code{FALSE}. Only used in a simulation study,  i.e. when
 \code{simulate=TRUE}.}
 
+\item{threep3.start}{Starting dose level for when \code{threep3 = TRUE}. Defaults to 1, i.e. the lowest dose level}
+
+\item{threep3.esc.only}{Whether to forbid de-escalation of doses when \code{threep3 = TRUE}. Defaults to \code{FALSE}}
+
 \item{method}{Optimisation method: options are \code{"exact"} (the default), 
 \code{"rjags"},  \code{"BRugs"},  or \code{"R2WinBUGS"}.}
 
@@ -134,8 +146,9 @@ been entered? Defaults to FALSE.}
 \item{seed}{Integer defining the state of the random number generator to
 allow reproducible results. The default is to not specify a seed.}
 
-\item{quietly}{Should the simulation number output be suppressed when
-running bcrm?  Defaults to FALSE.}
+\item{quietly}{How often to send a message back indicating how many
+simulated trials have been performed. Defaults to \code{quietly = 10}
+and the function reports back after every 10th simulation.}
 
 \item{file}{File name where the dose-response plots are stored,  in a pdf
 format. The program will amend the current sample size to the end of the
@@ -177,9 +190,9 @@ provided for cohorts recruited subsequent to any data given using \code{tox}
 and \code{notox}. The first component relates to the prior information.}
 \item{constrain}{Whether a constrained CRM design was used} \item{start}{The
 starting dose for the latest run of the model if \code{constrain=TRUE}}
-\item{target.tox}{The target toxicity level} \item{ff}{A number from 1-4
-identifying the functional form,  1 = Hyperbolic tangent,  2 = 1-parameter
-logistic,  3 = Power,  4 = 2-parameter logistic} \item{method}{The calculation
+\item{target.tox}{The target toxicity level} \item{ff}{The functional form of
+the dose-toxicity model;  "ht" = Hyperbolic tangent,  "logit1" = 1-parameter
+logistic,  "power" = Power,  "logit2" = 2-parameter logistic} \item{method}{The calculation
 method used} \item{pointest}{The summary estimate used to choose the next
 dose,  see \code{pointest}} \item{prior.alpha}{Information about the prior
 used for \eqn{alpha},  see \code{prior.alpha}} \item{data}{A data frame with
@@ -253,7 +266,7 @@ argument. A constrained CRM design can be implemented using
 \code{constrain=TRUE},  in which case dose-skipping is prohibited (i.e. the
 next cohort can only be dosed up to one dose level above the current
 cohort). If a constrained model is used then the starting dose must be
-specified using \code{start}. Alternatively,  if data have already been
+specified using \code{start}. Alternatively, if data have already been
 accrued,  then the dose level of the last recruited patient determines the
 constraint for the next patient.
 
@@ -302,7 +315,7 @@ by (Babb \emph{et al.},  1998) is not implemented. Therefore,  users wishing
 to implement an EWOC design should check whether their choice of prior for
 the model parameter(s) translates to a sensible prior for the MTD
 distribution before they implement the design. For example \preformatted{
-prior.alpha <- list(1, 1, 1) ff <- "ht" target.tox <- 0.2
+prior.alpha <- list(1, 1, 1); ff <- "ht"; target.tox <- 0.2
 samples.alpha <- getprior(prior.alpha, 2000)
 mtd <- find.x(ff, target.tox, alpha=samples.alpha) hist(mtd) }
 
@@ -317,8 +330,8 @@ probabilities of toxicity.
 dose <- c(1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250)
 ## Pre-specified probabilities of toxicity
 ## [dose levels 11-15 not specified in the paper,  and are for illustration only]
-p.tox0 <- c(0.010, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050, 0.100, 0.170, 0.300, 0.400, 0.500, 0.650
-  , 0.800, 0.900)
+p.tox0 <- c(0.010, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050,
+  0.100, 0.170, 0.300, 0.400, 0.500, 0.650, 0.800, 0.900)
 ## Data from the first 5 cohorts of 18 patients
 data <- data.frame(patient=1:18, dose=rep(c(1:4, 7), c(3, 4, 5, 4, 2)), tox=rep(0:1, c(16, 2)))
 ## Target toxicity level
@@ -329,20 +342,24 @@ target.tox <- 0.30
 ## Prior for alpha is lognormal with mean 0 (on log scale) 
 ## and standard deviation 1.34 (on log scale)
 ## The recommended dose for the next cohort if posterior mean is used
+\dontrun{
 Power.LN.bcrm <- bcrm(stop=list(nmax=18), data=data, p.tox0=p.tox0, dose=dose
   , ff="power", prior.alpha=list(3, 0, 1.34^2), target.tox=target.tox, constrain=FALSE
   , sdose.calculate="median", pointest="mean")
 print(Power.LN.bcrm)
 plot(Power.LN.bcrm)
+}
 
 ## Simulate 10 replicate trials of size 36 (cohort size 3) using this design 
 ## with constraint (i.e. no dose-skipping) and starting at lowest dose
 ## True probabilities of toxicity are set to pre-specified probabilities (p.tox0) 
+\dontrun{
 Power.LN.bcrm.sim <- bcrm(stop=list(nmax=36), p.tox0=p.tox0, dose=dose, ff="power"
   , prior.alpha=list(3, 0, 1.34^2), target.tox=target.tox, constrain=TRUE
   , sdose.calculate="median", pointest="mean", start=1, simulate=TRUE, nsims=10, truep=p.tox0)
 print(Power.LN.bcrm.sim)
 plot(Power.LN.bcrm.sim)
+}
 
 ## Comparing this CRM design with the standard 3+3 design 
 ## (only considering the first 12 dose levels)
@@ -363,11 +380,13 @@ sdose <- log(dose/250)
 mu <- c(2.15, 0.52)
 Sigma <- rbind(c(0.84^2, 0.134), c(0.134, 0.80^2))
 ## Using rjags (requires JAGS to be installed)
+\dontrun{
 TwoPLogistic.mean.bcrm <- bcrm(stop=list(nmax=18), data=data, sdose=sdose
   , dose=dose, ff="logit2", prior.alpha=list(4, mu, Sigma), target.tox=target.tox
   , constrain=FALSE, pointest="mean", method="rjags")
 print(TwoPLogistic.mean.bcrm)
 plot(TwoPLogistic.mean.bcrm)
+}
 
 ## A 2-parameter model,  using an EWOC design with feasibility bound (MTD quantile) 
 ## of 0.25 to choose the next dose
@@ -433,9 +452,8 @@ Medicine} (2001) 20: 2827--2843.
 \code{\link{plot.bcrm}},  \code{\link{plot.bcrm.sim}},  \code{\link{threep3}}
 }
 \author{
-Michael Sweeting \email{michael.sweeting@leicester.ac.uk}
-(University of Leicester,  UK) and Graham Wheeler
-(graham.wheeler@ucl.ac.uk),  drawing on code originally developed by J. Jack
-Lee and Nan Chen,  Department of Biostatistics,  the University of Texas M. D.
-Anderson Cancer Center
+Michael Sweeting (University of Leicester, UK; \email{michael.sweeting@leicester.ac.uk})
+and Graham Wheeler (University College London, UK; \email{graham.wheeler@ucl.ac.uk}),
+drawing on code originally developed by J. Jack Lee and Nan Chen,
+Department of Biostatistics, University of Texas M.D. Anderson Cancer Center.
 }

@@ -1,7 +1,7 @@
 ## Bayesian CRM - extending original code of J. Jack Lee and Nan Chen,  Department of Biostatistics,  the University of Texas M. D. Anderson Cancer Center
-## Now using exact inference,  rjags,  R2WinBUGS or BRugs 
+## Now using exact inference,  rjags,  R2WinBUGS, or BRugs 
 
-### MJS & GMW 10/10/18
+### MJS & GMW 01/04/2019
 
 if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2", "logit <- ", "log.alpha", "inverse", "patient", "toxicity", "est", "target.tox", "q2.5", "q97.5", "q50", "q25", "q75", "ndose", "tox.cutpoints", "xmin", "ymin", "xmax", "ymax", "Loss", "Outcome", "traj", "Statistic", "..density..", "Toxicity", "weight", "Method", "..count..", "rec", "obs", "obs.rounded", "count", "n"))
 
@@ -37,6 +37,9 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #     cohort     --> cohort size - default = 3
 #     target.tox --> target toxicity 
 #   constrain --> TRUE (default) or FALSE
+#   only.below --> TRUE or FALSE; if TRUE, only choose largest dose that has estimate below
+#                target (if no dose below target, choose lowest dose level unless stopping
+#                criteria satisfied); otherwise, choose dose level closest to target
 #    sdose.calculate -> What plug-in estimate of the prior alpha should be used to calculate the standardised doses? Options are "mean" (default) or "median"
 #   pointest   --> Which summary estimate of the posterior distribution should be used to choose next dose,  "plugin" (default),  "mean" or a numerical quantile between 0 and 1 (e.g. 0.5). If NULL then escalation based on posterior intervals (Loss function approach) is assumed
 #  tox.cutpoints --> Specify the cutpoints for toxicity intervals if these are to be used to choose next dose,  e.g. Underdosing [0, 0.2],  Target dosing (0.2,  0.35],  Excessive toxicity (0.35,  0.60],  Unacceptable toxicity (0.60,  1.00]
@@ -46,6 +49,8 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #    nsims  --> No. of simulations to perform if simulate==T (defaults to 1)
 #   truep       --> True probabilities of response at dose levels to simulate data. Only should be specified if simulate=TRUE
 #    threep3     --> If TRUE (default is FALSE) then operating characteristics of the simulated design are compared against a standard rule-based 3+3 design
+#    threep3.start --> Starting dose level for threep3 if threep3 called (default is 1)
+#    threep3.esc.only --> Logical; should 3+3 design forbid dose de-escalation? Default is FALSE.
 #  method      --> Optimisation method: options are "exact" (the default),  "rjags",  "BRugs",  or "R2WinBUGS"
 #     burnin.itr --> No. of burn-in iterations
 #     production.itr --> No. of production iterations
@@ -58,7 +63,6 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #     tox         --> number of successes (toxicities) (Deprecated)
 #     notox       --> number of failed patients (no-toxicities) (Deprecated)
 # ----------------------------------------------------------------------
-
 
 #' Bayesian Continual Reassessment Method for Phase I Dose-Escalation Trials
 #' 
@@ -122,7 +126,7 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' \code{constrain=TRUE},  in which case dose-skipping is prohibited (i.e. the
 #' next cohort can only be dosed up to one dose level above the current
 #' cohort). If a constrained model is used then the starting dose must be
-#' specified using \code{start}. Alternatively,  if data have already been
+#' specified using \code{start}. Alternatively, if data have already been
 #' accrued,  then the dose level of the last recruited patient determines the
 #' constraint for the next patient.
 #' 
@@ -212,7 +216,13 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' recruited to the trial. Defaults to 3
 #' @param target.tox The target toxicity probability. Defaults to 1/3.
 #' @param constrain Should a dose-skipping constraint be placed on the
-#' escalation procedure,  as imposed by a modified CRM? Defaults to TRUE.
+#' escalation procedure, as imposed by a modified CRM? Defaults to TRUE.
+#' @param only.below Should the dose chosen for the next patient be that with
+#' the largest risk of DLT that is not greater than the target (TRUE), or the
+#' dose that is closest to the target (FALSE); defaults to FALSE. If TRUE, and no
+#' dose has risk of DLT below or equal to target, the dose chosen will be the lowest
+#' dose level UNLESS one of the pre-defined stopping criteria is satisfied.
+#' NOTE: \code{only.below} applies when \code{loss = NULL}.
 #' @param sdose.calculate What plug-in estimate of the prior alpha should be
 #' used to calculate the standardised doses? Options are \code{"mean"}
 #' (default) or \code{"median"}. Only required if \code{sdose} is missing.
@@ -233,9 +243,9 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' \code{tox.cutpoints=c(0.2, 0.35, 0.60)}.
 #' @param loss A vector of length \code{length(tox.cutpoints)+1} specifying the
 #' losses associated with each toxicity interval,  e.g. Underdosing = 1,  Target
-#' dosing =0,  Excessive toxicity=1,  Unacceptable toxicity=2
-#' @param start Dose level used at the beginning of the trial. Required if
-#' \code{constrain=TRUE}.
+#' dosing = 0,  Excessive toxicity = 1,  Unacceptable toxicity = 2.
+#' @param start Dose level to be used at the beginning of the trial. Required if
+#' \code{constrain=TRUE}. 
 #' @param simulate Should a simulation be conducted to assess operating
 #' characteristics? Defaults to \code{TRUE}. If \code{FALSE},  a single CRM
 #' trial is run interactively,  allowing the user to input outcomes after each
@@ -249,6 +259,8 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' design be calculated,  for comparison with \code{bcrm} design? Defaults to
 #' \code{FALSE}. Only used in a simulation study,  i.e. when
 #' \code{simulate=TRUE}.
+#' @param threep3.start Starting dose level for when \code{threep3 = TRUE}. Defaults to 1, i.e. the lowest dose level
+#' @param threep3.esc.only Whether to forbid de-escalation of doses when \code{threep3 = TRUE}. Defaults to \code{FALSE}
 #' @param method Optimisation method: options are \code{"exact"} (the default), 
 #' \code{"rjags"},  \code{"BRugs"},  or \code{"R2WinBUGS"}.
 #' @param burnin.itr Number of burn-in iterations (default 2000).
@@ -297,9 +309,9 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' and \code{notox}. The first component relates to the prior information.}
 #' \item{constrain}{Whether a constrained CRM design was used} \item{start}{The
 #' starting dose for the latest run of the model if \code{constrain=TRUE}}
-#' \item{target.tox}{The target toxicity level} \item{ff}{A number from 1-4
-#' identifying the functional form,  1 = Hyperbolic tangent,  2 = 1-parameter
-#' logistic,  3 = Power,  4 = 2-parameter logistic} \item{method}{The calculation
+#' \item{target.tox}{The target toxicity level} \item{ff}{The functional form of
+#' the dose-toxicity model;  "ht" = Hyperbolic tangent,  "logit1" = 1-parameter
+#' logistic,  "power" = Power,  "logit2" = 2-parameter logistic} \item{method}{The calculation
 #' method used} \item{pointest}{The summary estimate used to choose the next
 #' dose,  see \code{pointest}} \item{prior.alpha}{Information about the prior
 #' used for \eqn{alpha},  see \code{prior.alpha}} \item{data}{A data frame with
@@ -315,18 +327,17 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' to implement an EWOC design should check whether their choice of prior for
 #' the model parameter(s) translates to a sensible prior for the MTD
 #' distribution before they implement the design. For example \preformatted{
-#' prior.alpha <- list(1, 1, 1) ff <- "ht" target.tox <- 0.2
+#' prior.alpha <- list(1, 1, 1); ff <- "ht"; target.tox <- 0.2
 #' samples.alpha <- getprior(prior.alpha, 2000)
 #' mtd <- find.x(ff, target.tox, alpha=samples.alpha) hist(mtd) }
 #' 
 #' One-parameter models are designed as working models only,  and should not be
 #' used with an escalation strategy based on intervals of the posterior
 #' probabilities of toxicity.
-#' @author Michael Sweeting \email{michael.sweeting@@leicester.ac.uk}
-#' (University of Leicester,  UK) and Graham Wheeler
-#' (graham.wheeler@@ucl.ac.uk),  drawing on code originally developed by J. Jack
-#' Lee and Nan Chen,  Department of Biostatistics,  the University of Texas M. D.
-#' Anderson Cancer Center
+#' @author Michael Sweeting (University of Leicester, UK; \email{michael.sweeting@@leicester.ac.uk})
+#' and Graham Wheeler (University College London, UK; \email{graham.wheeler@@ucl.ac.uk}),
+#' drawing on code originally developed by J. Jack Lee and Nan Chen,
+#' Department of Biostatistics, University of Texas M.D. Anderson Cancer Center.
 #' @seealso \code{\link{print.bcrm}},  \code{\link{print.bcrm.sim}}, 
 #' \code{\link{plot.bcrm}},  \code{\link{plot.bcrm.sim}},  \code{\link{threep3}}
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
@@ -356,8 +367,8 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' dose <- c(1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250)
 #' ## Pre-specified probabilities of toxicity
 #' ## [dose levels 11-15 not specified in the paper,  and are for illustration only]
-#' p.tox0 <- c(0.010, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050, 0.100, 0.170, 0.300, 0.400, 0.500, 0.650
-#'   , 0.800, 0.900)
+#' p.tox0 <- c(0.010, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050,
+#'   0.100, 0.170, 0.300, 0.400, 0.500, 0.650, 0.800, 0.900)
 #' ## Data from the first 5 cohorts of 18 patients
 #' data <- data.frame(patient=1:18, dose=rep(c(1:4, 7), c(3, 4, 5, 4, 2)), tox=rep(0:1, c(16, 2)))
 #' ## Target toxicity level
@@ -368,20 +379,24 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' ## Prior for alpha is lognormal with mean 0 (on log scale) 
 #' ## and standard deviation 1.34 (on log scale)
 #' ## The recommended dose for the next cohort if posterior mean is used
+#' \dontrun{
 #' Power.LN.bcrm <- bcrm(stop=list(nmax=18), data=data, p.tox0=p.tox0, dose=dose
 #'   , ff="power", prior.alpha=list(3, 0, 1.34^2), target.tox=target.tox, constrain=FALSE
 #'   , sdose.calculate="median", pointest="mean")
 #' print(Power.LN.bcrm)
 #' plot(Power.LN.bcrm)
+#' }
 #' 
 #' ## Simulate 10 replicate trials of size 36 (cohort size 3) using this design 
 #' ## with constraint (i.e. no dose-skipping) and starting at lowest dose
 #' ## True probabilities of toxicity are set to pre-specified probabilities (p.tox0) 
+#' \dontrun{
 #' Power.LN.bcrm.sim <- bcrm(stop=list(nmax=36), p.tox0=p.tox0, dose=dose, ff="power"
 #'   , prior.alpha=list(3, 0, 1.34^2), target.tox=target.tox, constrain=TRUE
 #'   , sdose.calculate="median", pointest="mean", start=1, simulate=TRUE, nsims=10, truep=p.tox0)
 #' print(Power.LN.bcrm.sim)
 #' plot(Power.LN.bcrm.sim)
+#' }
 #' 
 #' ## Comparing this CRM design with the standard 3+3 design 
 #' ## (only considering the first 12 dose levels)
@@ -402,11 +417,13 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' mu <- c(2.15, 0.52)
 #' Sigma <- rbind(c(0.84^2, 0.134), c(0.134, 0.80^2))
 #' ## Using rjags (requires JAGS to be installed)
+#' \dontrun{
 #' TwoPLogistic.mean.bcrm <- bcrm(stop=list(nmax=18), data=data, sdose=sdose
 #'   , dose=dose, ff="logit2", prior.alpha=list(4, mu, Sigma), target.tox=target.tox
 #'   , constrain=FALSE, pointest="mean", method="rjags")
 #' print(TwoPLogistic.mean.bcrm)
 #' plot(TwoPLogistic.mean.bcrm)
+#' }
 #' 
 #' ## A 2-parameter model,  using an EWOC design with feasibility bound (MTD quantile) 
 #' ## of 0.25 to choose the next dose
@@ -448,11 +465,11 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
                            nmin=NULL, safety=NULL),
                  data=NULL, p.tox0=NULL, sdose=NULL, dose=NULL, ff,
-                 prior.alpha, cohort=3, target.tox, constrain=TRUE,
+                 prior.alpha, cohort=3, target.tox, constrain=TRUE, only.below=FALSE,
                  sdose.calculate="mean", pointest="plugin",
                  tox.cutpoints=NULL, loss=NULL,
                  start=NULL, simulate=FALSE, nsims=1, truep=NULL,
-                 threep3=FALSE, method="exact", burnin.itr=2000,
+                 threep3=FALSE, threep3.start = 1, threep3.esc.only=FALSE, method="exact", burnin.itr=2000,
                  production.itr=2000,
                  bugs.directory="c:/Program Files/WinBUGS14/",
                  plot=FALSE, seed=NULL,  quietly=10,  file=NULL,
@@ -503,6 +520,8 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
   
   if(ff=="logit2" & (length(prior.alpha[[2]])<2 | length(prior.alpha[[3]])<2)) stop("second and third components of `prior.alpha' must be vectors of size 2")
   
+  if(threep3==TRUE & threep3.esc.only==TRUE & threep3.start!=1) stop("For 3+3 design with escalation only, starting dose for 3+3 must be equal to lowest dose (1)")
+  if(threep3==TRUE & ((!missing(sdose) & !(threep3.start %in% 1:length(sdose))) | (!missing(p.tox0) & !(threep3.start %in% 1:length(p.tox0))) )) stop("Start dose for 3+3 design must be one of the available dose levels")
   # Set seed if specified
   if(!is.null(seed)){
     set.seed(seed)
@@ -531,7 +550,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
     if(any(data$patient != 1:dim(data)[1])) stop("'patient' variable in data must be an ascending vector of positive integers")
     if(any(!(data$tox %in% c(0, 1)))) stop("'tox' variable in data must be a vector of zeros (no toxicity) and ones (toxicity)")
     if(any(!(data$dose %in% 1:length(sdose)))) stop(paste("'dose' variable in data must contain the dose levels (1 to ", length(sdose), ")", sep=""))   
-    if(!is.null(start)) warning("start no longer needs to be specified   if data is given; using last recruited patient as current dose")
+    if(!is.null(start)) warning("start no longer needs to be specified if data is given; using last recruited patient as current dose")
     start <- as.numeric(data$dose[1])
   }
   
@@ -563,6 +582,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
   if (simulate){
     new.tox <- new.notox <- rep(0, k)
     current <- start - 1
+    first<-TRUE
     
     alpha <- switch(method
                     , rjags=getprior(prior.alpha,  10000)
@@ -572,18 +592,18 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
                     , exact.sim=Posterior.exact.sim(new.tox, new.notox, sdose, ff, prior.alpha, pointest)
     )
     prior.ndose <- switch(method
-                          , rjags=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-                          , BRugs=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-                          , R2WinBUGS=nextdose(alpha, sdose, ff, target.tox, constrain, pointest, current, tox.cutpoints, loss, quantiles)
-                          , exact=nextdose.exact(alpha, sdose, ff, target.tox, constrain, pointest, current)
-                          , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, pointest, current)
+                          , rjags=nextdose(alpha, sdose, ff, target.tox, constrain, first, pointest, current, tox.cutpoints, loss, quantiles,only.below)
+                          , BRugs=nextdose(alpha, sdose, ff, target.tox, constrain, first, pointest, current, tox.cutpoints, loss, quantiles,only.below)
+                          , R2WinBUGS=nextdose(alpha, sdose, ff, target.tox, constrain, first, pointest, current, tox.cutpoints, loss, quantiles,only.below)
+                          , exact=nextdose.exact(alpha, sdose, ff, target.tox, constrain, first, pointest, current,only.below)
+                          , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, first, pointest, current,only.below)
     )
     ndose <- prior.ndose
-
+    first<-FALSE
     out <- lapply(1:nsims, simFun, stop, ndose, sdose, dose, constrain, start, ff,
                                   cohort, method, pointest, tox.cutpoints, loss,
                                   burn = burnin.itr, iter = production.itr, quantiles,
-                                  prior.alpha, truep, quietly)
+                                  prior.alpha, truep, only.below, quietly, bugs.directory)
     class(out) <- "bcrm.sim"
     if (threep3){
       if(length(truep) > 9 & !quietly){
@@ -592,12 +612,20 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
         if (yn!="y" & yn=="Y") return(out)
       }
       message("  Calculating operating characteristics of a standard 3+3 trial for comparison...")
-      out[[1]]$threep3 <- threep3(truep, start=start, dose=dose) 
+      out[[1]]$threep3 <- threep3(truep, threep3.start = threep3.start, threep3.esc.only = threep3.esc.only, dose=dose) 
     }
   } else { # not simulating
-    new.tox <- as.numeric(xtabs(tox ~ factor(dose, levels=1:k), data=data))
-    new.notox <- as.numeric(xtabs((1 - tox) ~ factor(dose,levels=1:k), data=data))
-    current <- as.numeric(data$dose[dim(data)[1]])
+    if(is.null(data)){
+      new.tox<- rep(0,k)
+      new.notox<-rep(0,k)
+      current<-start-1
+      first<-TRUE
+      }else{
+      new.tox <- as.numeric(xtabs(tox ~ factor(dose, levels=1:k), data=data))
+      new.notox <- as.numeric(xtabs((1 - tox) ~ factor(dose,levels=1:k), data=data))
+      current <- as.numeric(data$dose[dim(data)[1]])
+      first<-FALSE
+      }
     alpha <-switch(method
                    ,rjags=Posterior.rjags(new.tox,new.notox,sdose,ff,prior.alpha,burnin.itr,production.itr)
                    ,BRugs=Posterior.BRugs(new.tox,new.notox,sdose,ff,prior.alpha,burnin.itr,production.itr)
@@ -610,11 +638,11 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
     newdata <- data
     
     prior.ndose<-switch(method
-                        ,rjags=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
-                        ,BRugs=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
-                        ,R2WinBUGS=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
-                        ,exact=nextdose.exact(alpha,sdose,ff,target.tox,constrain,pointest,current)
-                        ,exact.sim=nextdose.exact.sim(alpha,sdose,ff,target.tox,constrain,pointest,current)
+                        ,rjags=nextdose(alpha,sdose,ff,target.tox,constrain,first,pointest,current,tox.cutpoints,loss,quantiles,only.below)
+                        ,BRugs=nextdose(alpha,sdose,ff,target.tox,constrain,first,pointest,current,tox.cutpoints,loss,quantiles,only.below)
+                        ,R2WinBUGS=nextdose(alpha,sdose,ff,target.tox,constrain,first,pointest,current,tox.cutpoints,loss,quantiles,only.below)
+                        ,exact=nextdose.exact(alpha,sdose,ff,target.tox,constrain,first,pointest,current,only.below)
+                        ,exact.sim=nextdose.exact.sim(alpha,sdose,ff,target.tox,constrain,first,pointest,current,only.below)
     )
     ndose <- prior.ndose
     
@@ -642,6 +670,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
       new.tox <- interact$tox
       new.notox <- interact$notox
       current <- interact$ans
+      first<-FALSE
       
       currentdata <- data.frame(patient = (ncurrent - cohort+1):ncurrent,
                                 dose = rep(current, cohort),
@@ -656,11 +685,11 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
                     ,exact.sim=Posterior.exact.sim(new.tox,new.notox,sdose,ff,prior.alpha,pointest)
       )
       ndose<-switch(method
-                    ,rjags=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
-                    ,BRugs=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
-                    ,R2WinBUGS=nextdose(alpha,sdose,ff,target.tox,constrain,pointest,current,tox.cutpoints,loss,quantiles)
-                    ,exact=nextdose.exact(alpha,sdose,ff,target.tox,constrain,pointest,current)
-                    ,exact.sim=nextdose.exact.sim(alpha,sdose,ff,target.tox,constrain,pointest,current)
+                    ,rjags=nextdose(alpha,sdose,ff,target.tox,constrain,first,pointest,current,tox.cutpoints,loss,quantiles,only.below)
+                    ,BRugs=nextdose(alpha,sdose,ff,target.tox,constrain,first,pointest,current,tox.cutpoints,loss,quantiles,only.below)
+                    ,R2WinBUGS=nextdose(alpha,sdose,ff,target.tox,constrain,first,pointest,current,tox.cutpoints,loss,quantiles,only.below)
+                    ,exact=nextdose.exact(alpha,sdose,ff,target.tox,constrain,first,pointest,current,only.below)
+                    ,exact.sim=nextdose.exact.sim(alpha,sdose,ff,target.tox,constrain,first,pointest,current,only.below)
       )
       
       stopped<-stop.check(stop,ncurrent,ndose,new.tox,new.notox,simulate)
@@ -670,13 +699,14 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
       results$notox<-new.notox
       results$ndose[[length(results$ndose)+1]]<-ndose
       results$data<-newdata
-
+      class(results) <- "bcrm"
       if(plot){
         plot(results,file)
       }
     } # Close while
 
     out <- results
+    class(out) <- "bcrm"
   } # Close else { # not simulating
   
   return(out)
@@ -701,10 +731,12 @@ crm.interactive <- function(tox, notox, ncurrent, cohort, ndose, dose){
     y <- vector()
     
     if(is.null(dose)){
-      message("\n\n RECOMMENDED DOSE LEVEL FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  "IS:",  ndose[[1]])
+      if(cohort==1){message("\n\n RECOMMENDED DOSE LEVEL FOR PATIENT ", ncurrent,  " IS: ",  ndose[[1]])
+        }else{message("\n\n RECOMMENDED DOSE LEVEL FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  " IS: ",  ndose[[1]])}
       ans  <-  get.dose.level(k, ncurrent, cohort)     
     } else {
-      message("\n\n RECOMMENDED DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  "IS:",  dose[ndose[[1]]])
+      if(cohort==1){message("\n\n RECOMMENDED DOSE FOR PATIENT ", ncurrent,  " IS: ",  dose[ndose[[1]]])
+        }else{message("\n\n RECOMMENDED DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent,  " IS: ",  dose[ndose[[1]]])}
       ans  <-  get.dose(dose, ncurrent, cohort)     
     }
     if (ans==-2)
@@ -718,18 +750,18 @@ crm.interactive <- function(tox, notox, ncurrent, cohort, ndose, dose){
     }  
     
     for(j in (ncurrent-cohort+1):ncurrent){
-      message("ENTER TOXICITY DATA FOR PATIENT", j, "(1=TOX,  0=NO TOX): ")
+      message("ENTER TOXICITY DATA FOR PATIENT ", j, " (1 = TOX, 0 = NO TOX): ")
       y  <-  c(y, get.answer())               
     }
     # give the user a last chance to modify the treatment and outcome
     message("\n\t\t ENTERED VALUES:")
     if(is.null(dose)){
-      message("\n DOSE LEVEL ...",  ans)
+      message("\n DOSE LEVEL ... ",  ans)
     } else {
-      message("\n DOSE ...",  ans)
+      message("\n DOSE ... ",  ans)
     }
-    message("\n TOXICITIES ....", y)
-    message("\n PRESS `RETURN' IF OK,  OR ANY OTHER KEY TO ENTER NEW VALUES ")
+    message("\n TOXICITIES ... ", paste(y, collapse = " "))
+    message("\n HIT 'RETURN' IF OK, OR ANY OTHER KEY TO ENTER NEW VALUES")
     key  <-  readline()
     if (nchar(key)==0) break
   }
@@ -768,8 +800,10 @@ get.answer  <-  function() {
 # ----------------------------------------------------------------------
 get.dose.level  <-  function( n , ncurrent, cohort) {
   repeat {
-    message("\n\n ENTER DOSE LEVEL BETWEEN 1 AND ",  n, " FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)
-    message("\n (`RETURN' TO ACCEPT RECOMMENDATION,  0 TO EXIT AND RETURN CURRENT RESULTS)  ")
+    if(cohort == 1){message("\n\n ENTER DOSE LEVEL BETWEEN 1 AND ",  n, " FOR PATIENT ", ncurrent)
+      }else{message("\n\n ENTER DOSE LEVEL BETWEEN 1 AND ",  n, " FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)}
+#    message("\n ('RETURN' TO ACCEPT RECOMMENDATION, 0 TO EXIT AND RETURN CURRENT RESULTS) ")
+    message("\n EITHER: \n a) HIT 'RETURN' TO ACCEPT RECOMMENDATION \n b) TYPE ANOTHER POSSIBLE DOSE LEVEL AND HIT 'RETURN' TO USE ANOTHER DOSE LEVEL \n c) TYPE '0' AND HIT 'RETURN' TO EXIT AND RETURN CURRENT RESULTS ")
     
     ans  <-  readline()
     if ( nchar(ans)==0 ) return( -2 )
@@ -789,9 +823,11 @@ get.dose.level  <-  function( n , ncurrent, cohort) {
 # ----------------------------------------------------------------------
 get.dose  <-  function( dose , ncurrent, cohort) {
   repeat {
-    message("\n\n ENTER DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)
-    message("\n POSSIBLE CHOICES ARE ", dose)
-    message("\n (`RETURN' TO ACCEPT RECOMMENDATION,  0 TO EXIT AND RETURN CURRENT RESULTS)  ")
+    if(cohort == 1){message("\n\n ENTER DOSE FOR PATIENT ", ncurrent)
+      }else{message("\n\n ENTER DOSE FOR PATIENTS ", ncurrent-cohort+1, " to ", ncurrent)}
+    message("\n POSSIBLE CHOICES ARE ", paste(dose, collapse = " "))
+#    message("\n ('RETURN' TO ACCEPT RECOMMENDATION, 0 TO EXIT AND RETURN CURRENT RESULTS) ")
+    message("\n EITHER: \n a) HIT 'RETURN' TO ACCEPT RECOMMENDATION \n b) TYPE ANOTHER POSSIBLE DOSE AND HIT 'RETURN' TO USE ANOTHER DOSE \n c) TYPE '0' AND HIT 'RETURN' TO EXIT AND RETURN CURRENT RESULTS) ")
     
     ans  <-  readline()
     if ( nchar(ans)==0 ) return( -2 )
@@ -837,6 +873,7 @@ get.dose  <-  function( dose , ncurrent, cohort) {
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
 #' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' @export
 plot.bcrm <- function(x, file=NULL, each=FALSE, trajectory=FALSE, ...){
   dose <- if(is.null(x$dose)) x$sdose else x$dose
   dose.label <- if(is.null(x$dose)) "Standardised dose" else "Dose"
@@ -1018,6 +1055,7 @@ plot.bcrm <- function(x, file=NULL, each=FALSE, trajectory=FALSE, ...){
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
 #' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' @export
 plot.bcrm.sim <- function(x, trajectories=FALSE, file=NULL, threep3=FALSE, ...){
   dose <- if(is.null(x[[1]]$dose)) x[[1]]$sdose else x[[1]]$dose
   dose.label <- if(is.null(x[[1]]$dose)) "Standardised dose" else "Dose"
@@ -1163,6 +1201,7 @@ plot.bcrm.sim <- function(x, trajectories=FALSE, file=NULL, threep3=FALSE, ...){
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
 #' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' @export
 plot.threep3 <- function(x, file=NULL, ...){
   dose <- if(is.null(x$dose)) 1:length(x$truep) else x$dose
   dose.label <- if(is.null(x$dose)) "Dose levels" else "Dose"
@@ -1259,7 +1298,9 @@ plot.threep3 <- function(x, file=NULL, ...){
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
 #' \url{http://www.jstatsoft.org/article/view/v054i13}
-print.bcrm <- function(x, ...){
+#' @export
+print.bcrm <- function(x, tox.cutpoints=NULL, trajectories=FALSE,
+                       threep3=FALSE, ...){
   cat("\n Estimation method: ", x$method)
   
   cat("\n Target toxicity level: ", x$target.tox)
@@ -1367,6 +1408,7 @@ print.bcrm <- function(x, ...){
 #-----------------------------------------------------------------------
 #    Print function for an object of class bcrm.sim
 # -----------------------------------
+#' @export
 print.bcrm.sim <- function(x, tox.cutpoints=NULL, trajectories=FALSE,
                            threep3=FALSE, ...){
   if(trajectories){
@@ -1476,6 +1518,7 @@ print.bcrm.sim <- function(x, tox.cutpoints=NULL, trajectories=FALSE,
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
 #' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' @export
 print.threep3 <- function(x, tox.cutpoints=NULL, dose=NULL, ...){
   if(is.null(dose)){
     dose <- 1:length(x$truep)
