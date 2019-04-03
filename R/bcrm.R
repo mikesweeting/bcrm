@@ -1,7 +1,7 @@
 ## Bayesian CRM - extending original code of J. Jack Lee and Nan Chen,  Department of Biostatistics,  the University of Texas M. D. Anderson Cancer Center
 ## Now using exact inference,  rjags,  R2WinBUGS, or BRugs 
 
-### MJS & GMW 01/04/2019
+### MJS & GMW 03/04/2019
 
 if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2", "logit <- ", "log.alpha", "inverse", "patient", "toxicity", "est", "target.tox", "q2.5", "q97.5", "q50", "q25", "q75", "ndose", "tox.cutpoints", "xmin", "ymin", "xmax", "ymax", "Loss", "Outcome", "traj", "Statistic", "..density..", "Toxicity", "weight", "Method", "..count..", "rec", "obs", "obs.rounded", "count", "n"))
 

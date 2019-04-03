@@ -56,12 +56,16 @@ nextdose <- function(samples.alpha, sdose, ff, target.tox, constrain, first, poi
   # Next dose
   est.below<-est[which(est<=target)]
   ndose <- if(only.below==FALSE){if(!constrain){
-    if(!first){which.min(abs(est-target))}else{min(current+1,k)}
+    if(!first){which.min(abs(est-target))}else{
+      if(length(current)!=0){min(current+1,k)}else{which.min(abs(est-target))}
+      }
   } else {which.min(abs(est[1:min(current+1, k)]-target))}
   }else{
     if(length(est.below)==0){1}else{
     if(!constrain){
-      if(!first){which.min(abs(est.below-target))}else{min(current+1,k)}
+      if(!first){which.min(abs(est.below-target))}else{
+        if(length(current)!=0){min(current+1,k)}else{which.min(abs(est.below-target))}
+        }
     } else {which.min(abs(est.below[1:min(current+1, k)]-target))}}
     
   }

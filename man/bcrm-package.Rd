@@ -11,7 +11,7 @@ been recruited, or via simulation to assess operating characteristics.
 }
 \details{
 \tabular{ll}{ Package: \tab bcrm\cr Type: \tab Package\cr Version: \tab
-0.4.9\cr Date: \tab 2015-10-10\cr License: \tab GPL (>= 2) \cr LazyLoad:
+0.5.1\cr Date: \tab 2019-04-03\cr License: \tab GPL (>= 2) \cr LazyLoad:
 \tab yes\cr }
 }
 \references{

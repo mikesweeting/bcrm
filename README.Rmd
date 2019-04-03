@@ -50,12 +50,14 @@ p.tox0<-c(0.010,0.015,0.020,0.025,0.030,0.040,0.050,0.100,0.170,0.300,0.400,0.50
 data<-data.frame(patient=1:18,dose=rep(c(1:4,7),c(3,4,5,4,2)),tox=rep(0:1,c(16,2)))
 ## Target toxicity level
 target.tox<-0.30
+## Random seed set to 12345 for this example
+seed<-12345
 
 ## Simulate 10 replicate trials of size 36 (cohort size 3) using this design 
 ## with constraint (i.e. no dose-skipping) and starting at lowest dose
 ## True probabilities of toxicity are set to pre-specified probabilities (p.tox0) 
 Power.LN.bcrm.sim<-bcrm(stop=list(nmax=36),p.tox0=p.tox0,dose=dose,ff="power"
   ,prior.alpha=list(3,0,1.34^2),target.tox=target.tox,constrain=TRUE
-  ,sdose.calculate="median",pointest="mean",start=1,simulate=TRUE,nsims=10,truep=p.tox0)
+  ,sdose.calculate="median",pointest="mean",start=1,simulate=TRUE,nsims=10,truep=p.tox0, seed=seed)
 print(Power.LN.bcrm.sim)
 ```
