@@ -71,8 +71,10 @@ sdose <- find.x(ff, p.tox0, alpha=1)
 ## Posterior distribution of the MTD (on standardised dose scale) using data 
 ## from the cancer trial described in Neuenschwander et al 2008.
 ## Using R2WinBUGS
+\dontrun{
 posterior.samples <- Posterior.R2WinBUGS(tox, notox, sdose, ff, prior.alpha
-  , burnin.itr=2000, production.itr=2000, bugs.directory = "C:/Program Files (x86)/WinBUGS14/")
+  , burnin.itr=2000, production.itr=2000, bugs.directory = "C:/Program Files/WinBUGS14/")
+  }
 
 }
 \references{

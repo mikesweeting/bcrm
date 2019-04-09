@@ -238,10 +238,12 @@ which.f  <-  function( ff ) {
 #' ## Posterior distribution of the MTD (on standardised dose scale) using data 
 #' ## from the cancer trial described in Neuenschwander et al 2008.
 #' ## Using rjags
+#' \dontrun{
 #' posterior.samples <- Posterior.rjags(tox, notox, sdose, ff, prior.alpha
 #'   , burnin.itr=2000, production.itr=2000)
 #' posterior.mtd <- find.x(ff, target.tox, alpha=posterior.samples)
 #' hist(posterior.mtd)
+#' }
 #' 
 #' 
 #' @export find.x

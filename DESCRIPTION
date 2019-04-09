@@ -3,10 +3,10 @@ Type: Package
 Title: Bayesian Continual Reassessment Method for Phase I Dose-Escalation Trials
 Version: 0.5.1
 Date: 2019-04-03
-Authors@R: as.person(c(
-    "Michael Sweeting <michael.sweeting@leicester.ac.uk> [aut]", 
-    "Graham Wheeler <graham.wheeler@ucl.ac.uk> [aut, cre]"
-  ))
+Authors@R: c(
+    person("Michael", "Sweeting", email="michael.sweeting@leicester.ac.uk", role= "aut"), 
+    person("Graham", "Wheeler", email="graham.wheeler@ucl.ac.uk", role=c("aut", "cre"))
+    )
 Maintainer: Graham Wheeler <graham.wheeler@ucl.ac.uk>
 Description: Implements a wide variety of one- and two-parameter Bayesian CRM
     designs. The program can run interactively, allowing the user to enter outcomes

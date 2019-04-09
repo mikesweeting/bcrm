@@ -235,7 +235,7 @@ cutpoints of the toxicity intervals using \code{tox.cutpoints} and the
 associated losses using \code{loss}.
 
 The possible choice of dose-toxicity model can be specified using \code{ff}, 
-and includes the 1-parameter hyberbolic tangent,  logistic or power "working
+and includes the 1-parameter hyperbolic tangent,  logistic or power "working
 models",  and the 2-parameter logistic model as follows: \describe{
 \item{Hyperbolic
 Tangent}{\deqn{p(Tox|d^*)=\left[(tanh(d^*)+1)/2\right]^\alpha}{p(Tox|d*)=[(tanh(d*)+1)/2]^\alpha}}
