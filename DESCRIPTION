@@ -2,7 +2,7 @@ Package: bcrm
 Type: Package
 Title: Bayesian Continual Reassessment Method for Phase I Dose-Escalation Trials
 Version: 0.5.1
-Date: 2019-04-03
+Date: 2019-05-22
 Authors@R: c(
     person("Michael", "Sweeting", email="michael.sweeting@leicester.ac.uk", role= "aut"), 
     person("Graham", "Wheeler", email="graham.wheeler@ucl.ac.uk", role=c("aut", "cre"))
@@ -20,10 +20,9 @@ Imports:
     mvtnorm,
     rlang,
     ggplot2 (>= 1.0.1),
-    grid
-Suggests:
-    R2WinBUGS,
+    grid,
     BRugs,
+    R2WinBUGS,
     rjags,
     knitr
 RoxygenNote: 6.1.1
