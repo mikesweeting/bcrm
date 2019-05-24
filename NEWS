@@ -1,3 +1,11 @@
+Version 0.5.2 (23rd May 2019)
+-------------
+* MCMC packages ("R2WinBUGS", "BRugs", "rjags") moved from "Import" to "Suggests" in Description file - many thanks to Prof. Brian Ripley for this request.
+* "plot.bcrm" updated to draw points at DLT estimates used in trial
+rather than at median only.
+* Prior sampling under MCMC approaches moved directly into R rather than calling MCMC programs.
+* Version numbers and dates updated.
+
 Version 0.5.1 (3rd April 2019)
 -------------
 * Minor bug in "nextdose" fixed, to ensure correct dose

@@ -162,12 +162,27 @@ Posterior.rjags  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
   datas  <- tox[all.patient!=0]
   datad  <- sdose[all.patient!=0]
   k  <-  length(datan)
+  if(k == 0){
+    t<-if (prior.alpha[[1]]==1){
+      rgamma(production.itr, prior.alpha[[2]], prior.alpha[[3]])
+    }else if (prior.alpha[[1]]==2){
+      runif(production.itr, prior.alpha[[2]], prior.alpha[[3]])
+    }else if (prior.alpha[[1]]==3){
+      dlnorm(production.itr, meanlog = prior.alpha[[2]], sdlog = sqrt(prior.alpha[[3]]))
+    }else if (prior.alpha[[1]]==4)  {
+      if (ff == "logit2")
+      exp(rmvnorm(production.itr,mean = prior.alpha[[2]], sigma = prior.alpha[[3]]))
+      else stop("Functional form not currently available with specified prior distribution")
+    } 
+    
+  }else{
   if (k == 1)
   {
     datan  <-  c(datan,  0)
     datas  <-  c(datas,  0)
     datad  <-  c(datad,  0)
   }
+
   mydata  <-  list(N1 = k,  s = datas, n = datan, d = datad,  p1 = prior.alpha[[2]],  p2 = prior.alpha[[3]])
   model.file <- if (prior.alpha[[1]] == 1)
   {
@@ -214,9 +229,11 @@ Posterior.rjags  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
   jagsobj <- rjags::jags.model(path.model, data=mydata, n.chains=2, quiet=TRUE, inits=inits.list)
   update(jagsobj, n.iter=burnin.itr, progress.bar="none")
   tt <- rjags::jags.samples(jagsobj,  "alpha",  n.iter=production.itr/2, progress.bar="none")
+  
   if(ff=="logit2"){
     t <- cbind(c(tt$alpha[1, , ]), c(tt$alpha[2, , ]))
   } else {   t <-  c(tt$alpha) }
+  }
   return(t)
 }
 
@@ -314,6 +331,20 @@ Posterior.BRugs  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
   datas  <- tox[all.patient!=0]
   datad  <- sdose[all.patient!=0]
   k  <-  length(datan)
+  if(k == 0){
+    t<-if (prior.alpha[[1]]==1){
+      rgamma(production.itr, prior.alpha[[2]], prior.alpha[[3]])
+    }else if (prior.alpha[[1]]==2){
+      runif(production.itr, prior.alpha[[2]], prior.alpha[[3]])
+    }else if (prior.alpha[[1]]==3){
+      dlnorm(production.itr, meanlog = prior.alpha[[2]], sdlog = sqrt(prior.alpha[[3]]))
+    }else if (prior.alpha[[1]]==4)  {
+      if (ff == "logit2")
+        exp(rmvnorm(production.itr,mean = prior.alpha[[2]], sigma = prior.alpha[[3]]))
+      else stop("Functional form not currently available with specified prior distribution")
+    } 
+    
+  }else{
   if (k == 1)
   {
     datan  <-  c(datan,  0)
@@ -367,6 +398,7 @@ Posterior.BRugs  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
   if(ff=="logit2"){
     t <- cbind(BRugs::samplesSample("alpha[1]"), BRugs::samplesSample("alpha[2]"))
   } else {   t <-  BRugs::samplesSample("alpha") }
+  }
   return(t)
 }
 
@@ -465,6 +497,20 @@ Posterior.R2WinBUGS  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.
   datas  <- tox[all.patient!=0]
   datad  <- sdose[all.patient!=0]
   k  <-  length(datan)
+  if(k == 0){
+    t<-if (prior.alpha[[1]]==1){
+      rgamma(production.itr, prior.alpha[[2]], prior.alpha[[3]])
+    }else if (prior.alpha[[1]]==2){
+      runif(production.itr, prior.alpha[[2]], prior.alpha[[3]])
+    }else if (prior.alpha[[1]]==3){
+      dlnorm(production.itr, meanlog = prior.alpha[[2]], sdlog = sqrt(prior.alpha[[3]]))
+    }else if (prior.alpha[[1]]==4)  {
+      if (ff == "logit2")
+        exp(rmvnorm(production.itr,mean = prior.alpha[[2]], sigma = prior.alpha[[3]]))
+      else stop("Functional form not currently available with specified prior distribution")
+    } 
+    
+  }else{
   if (k == 1)
   {
     datan  <-  c(datan,  0)
@@ -524,6 +570,7 @@ Posterior.R2WinBUGS  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.
     }
   }
   t <- apply(res$sims.array, 3, rbind)
+  }
   return(t)
 }
 
