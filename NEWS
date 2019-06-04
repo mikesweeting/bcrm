@@ -1,3 +1,8 @@
+Version 0.5.3 (4th June 2019)
+-------------
+* Bug changing start dose when constrain = TRUE fixed.
+* Version numbers and dates updated.
+
 Version 0.5.2 (23rd May 2019)
 -------------
 * MCMC packages ("R2WinBUGS", "BRugs", "rjags") moved from "Import" to "Suggests" in Description file - many thanks to Prof. Brian Ripley for this request.

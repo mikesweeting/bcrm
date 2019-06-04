@@ -105,12 +105,16 @@ nextdose.exact <- function(alpha, sdose, ff, target.tox, constrain, first, point
   quantiles <- alpha$dose.quantiles
   est.below<-est[which(est<=target.tox)]
   ndose <- if(only.below==FALSE){if(!constrain){
-    if(!first){which.min(abs(est-target.tox))}else{min(current+1,k)}
-  } else {which.min(abs(est[1:min(current+1, k)]-target.tox))}
+    if(!first){which.min(abs(est-target.tox))}else{
+      if(length(current)!=0){min(current+1,k)}else{which.min(abs(est-target.tox))}
+      }
+  } else {if(!first){which.min(abs(est[1:min(current+1, k)]-target.tox))}else{min(current+1,k)}}
   }else{
     if(length(est.below)==0){1}else{
       if(!constrain){
-        if(!first){which.min(abs(est.below-target.tox))}else{min(current+1,k)}
+        if(!first){which.min(abs(est.below-target.tox))}else{
+          if(length(current)!=0){min(current+1,k)}else{which.min(abs(est.below-target.tox))}
+        }
       } else {which.min(abs(est.below[1:min(current+1, k)]-target.tox))}}
     
   }
@@ -145,12 +149,16 @@ nextdose.exact.sim <- function(alpha, sdose, ff, target.tox, constrain, first, p
   else stop("Quantile estimation not available for exact computation,  please use pointest='mean' or 'plugin'")
   est.below<-est[which(est<=target.tox)]
   ndose <- if(only.below==FALSE){if(!constrain){
-    if(!first){which.min(abs(est-target.tox))}else{min(current+1,k)}
-  } else {which.min(abs(est[1:min(current+1, k)]-target.tox))}
+    if(!first){which.min(abs(est-target.tox))}else{
+      if(length(current)!=0){min(current+1,k)}else{which.min(abs(est-target.tox))}
+    }
+  } else {if(!first){which.min(abs(est[1:min(current+1, k)]-target.tox))}else{min(current+1,k)}}
   }else{
     if(length(est.below)==0){1}else{
       if(!constrain){
-        if(!first){which.min(abs(est.below-target.tox))}else{min(current+1,k)}
+        if(!first){which.min(abs(est.below-target.tox))}else{
+          if(length(current)!=0){min(current+1,k)}else{which.min(abs(est.below-target.tox))}
+        }
       } else {which.min(abs(est.below[1:min(current+1, k)]-target.tox))}}
     
   }

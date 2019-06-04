@@ -502,7 +502,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
   if((is.character(pointest) & pointest!="mean" & pointest!="plugin") | is.numeric(pointest) & (pointest<0 | pointest>1)) stop("pointest must be either `plugin',  `mean' or an EWOC feasibility quantile between 0 and 1")
   if(is.numeric(pointest) & method=="exact") stop("EWOC design must be fitted using MCMC methods")
   if(!is.null(tox.cutpoints) & method=="exact") stop("Escalation based on toxicity intervals must be fit using MCMC. Please specify either method=`rjags',  method='BRugs' or method='R2WinBUGS'")
-  
+  k<-max(length(p.tox0), length(sdose))
   if(simulate & is.null(truep)) stop("truep must be specified if simulating data")
   if(simulate){ 
     plot <- FALSE
@@ -513,6 +513,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
   
   if(ff=="logit2" & method=="exact") warning("Exact method slow for 2-parameter model,  suggest using rjags (MCMC)")
   if(constrain & is.null(start) & is.null(data)) stop("A starting dose level must be specified using `start' if constrain==TRUE")
+  if(constrain & is.null(data) & (start %in% 1:k)==FALSE) stop("Starting dose required but not specified as one of 1, 2, ..., k.")
   if((!is.null(tox.cutpoints) & is.null(loss)) | (is.null(tox.cutpoints) & !is.null(loss))) stop("Both tox.cutpoints and loss must be specified to conduct escalation based on toxicity intervals")
   if(!is.null(tox.cutpoints) & length(loss)!=length(tox.cutpoints)+1) stop("The number of losses must be one more than the number of cutpoints")
   if(!is.null(tox.cutpoints)) pointest <- NULL
