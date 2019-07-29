@@ -513,7 +513,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
   
   if(ff=="logit2" & method=="exact") warning("Exact method slow for 2-parameter model,  suggest using rjags (MCMC)")
   if(constrain & is.null(start) & is.null(data)) stop("A starting dose level must be specified using `start' if constrain==TRUE")
-  if(constrain & is.null(data) & (start %in% 1:k)==FALSE) stop("Starting dose required but not specified as one of 1, 2, ..., k.")
+  if(!is.null(start)){if(constrain & is.null(data) & (start %in% 1:k)==FALSE) {stop("Starting dose required but not specified as one of 1, 2, ..., k.")}}
   if((!is.null(tox.cutpoints) & is.null(loss)) | (is.null(tox.cutpoints) & !is.null(loss))) stop("Both tox.cutpoints and loss must be specified to conduct escalation based on toxicity intervals")
   if(!is.null(tox.cutpoints) & length(loss)!=length(tox.cutpoints)+1) stop("The number of losses must be one more than the number of cutpoints")
   if(!is.null(tox.cutpoints)) pointest <- NULL
@@ -603,7 +603,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
     first<-FALSE
     out <- lapply(1:nsims, simFun, stop, ndose, sdose, dose, constrain, start, ff,
                                   cohort, method, pointest, tox.cutpoints, loss,
-                                  burn = burnin.itr, iter = production.itr, quantiles,
+                                  burn = burnin.itr, iter = production.itr, quantiles, target.tox,
                                   prior.alpha, truep, only.below, quietly, bugs.directory)
     class(out) <- "bcrm.sim"
     if (threep3){
@@ -647,7 +647,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
     )
     ndose <- prior.ndose
     
-    stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox, simulate)
+    stopped <- stop.check(stop, target.tox, ncurrent, ndose, new.tox, new.notox, simulate)
     ndose <- stopped$ndose
 
     results <- list(dose=dose, sdose=sdose, tox=new.tox, notox=new.notox, ndose=list(ndose), constrain=constrain, start=start, target.tox=target.tox, ff=ff, method=method, pointest=pointest, tox.cutpoints=tox.cutpoints, loss=loss, prior.alpha=prior.alpha, data=data)
@@ -693,7 +693,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
                     ,exact.sim=nextdose.exact.sim(alpha,sdose,ff,target.tox,constrain,first,pointest,current,only.below)
       )
       
-      stopped<-stop.check(stop,ncurrent,ndose,new.tox,new.notox,simulate)
+      stopped<-stop.check(stop, target.tox, ncurrent,ndose,new.tox,new.notox,simulate)
       ndose<-stopped$ndose ## update ndose in case no doses are deemed safe
 
       results$tox<-new.tox

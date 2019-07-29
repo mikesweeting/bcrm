@@ -1,3 +1,9 @@
+Version 0.5.4 (29th July 2019)
+-------------
+* Bug fixed when start not required (caused some runs of bcrm to stop).
+* "target.tox" argument added to "stop.check" and "simFun"
+* Version numbers and dates updated.
+
 Version 0.5.3 (4th June 2019)
 -------------
 * Bug changing start dose when constrain = TRUE fixed.

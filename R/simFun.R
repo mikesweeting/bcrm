@@ -1,6 +1,6 @@
 simFun <- function(X, stop, ndose, sdose, dose, constrain, start, ff,
                    cohort, method, pointest, tox.cutpoints, loss,
-                   burn, iter, quantiles,
+                   burn, iter, quantiles, target.tox,
                    prior.alpha, truep, only.below, quietly=10, bugs.directory){
 
   k <- length(sdose)
@@ -11,7 +11,7 @@ simFun <- function(X, stop, ndose, sdose, dose, constrain, start, ff,
   ncurrent <- sum(new.tox + new.notox)
   newdata <- data.frame(patient=NULL, dose=NULL, tox=NULL)
   
-  stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox,
+  stopped <- stop.check(stop, target.tox, ncurrent, ndose, new.tox, new.notox,
                         simulate = TRUE)
   ndose <- stopped$ndose ## update ndose in case no doses are deemed safe
   
@@ -53,7 +53,7 @@ simFun <- function(X, stop, ndose, sdose, dose, constrain, start, ff,
                     , exact.sim=nextdose.exact.sim(alpha, sdose, ff, target.tox, constrain, first, pointest, current, only.below)
     )
     
-    stopped <- stop.check(stop, ncurrent, ndose, new.tox, new.notox,
+    stopped <- stop.check(stop, target.tox, ncurrent, ndose, new.tox, new.notox,
                           simulate=TRUE)
     ndose <- stopped$ndose ## update ndose in case no doses are deemed safe
     

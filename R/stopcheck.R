@@ -2,13 +2,14 @@
 #     Check whether we have reached any stopping criteria
 #
 #     stop         --> list of stopping criteria (nmax,  nmtd,  precision,  nmin)
+#     target.tox   --> Target Toxicity Level
 #     ncurrent     --> current sample size
 #     ndose     --> next dose information,  including posterior quantities
 #     new.tox     --> No. toxicities to date
 #     new.notox     --> No. non-toxicities to date
 #     simulate     --> Is this a simulation study?
 # ----------------------------------------------------------------------
-stop.check <- function(stop, ncurrent, ndose, new.tox, new.notox, simulate){
+stop.check <- function(stop, target.tox, ncurrent, ndose, new.tox, new.notox, simulate){
   answer1 <- answer2 <- answer3 <- answer5 <- FALSE
   answer4 <- TRUE
   if(!is.null(stop$nmin)){

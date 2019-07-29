@@ -7,8 +7,8 @@ Running under: Windows 10 x64 (build 17134)
 
 Status: OK
 
--- R CMD check results ----------------------------------------- bcrm 0.5.3 ----
-Duration: 43.3s
+-- R CMD check results ----------------------------------------- bcrm 0.5.4 ----
+Duration: 47.8s
 
 0 errors v | 0 warnings v | 0 notes v
 
