@@ -377,7 +377,7 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' ## A 1-parameter power model is used,  with standardised doses calculated using 
 #' ## the plug-in prior median
 #' ## Prior for alpha is lognormal with mean 0 (on log scale) 
-#' ## and standard deviation 1.34 (on log scale)
+#' ## and variance 1.34^2 (on log scale)
 #' ## The recommended dose for the next cohort if posterior mean is used
 #' \dontrun{
 #' Power.LN.bcrm <- bcrm(stop=list(nmax=18), data=data, p.tox0=p.tox0, dose=dose
