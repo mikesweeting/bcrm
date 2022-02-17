@@ -104,7 +104,7 @@
 #' each row representing a different design. Columns labelled "d k" and "tox k"
 #' represent the dose level and number of toxicities for the kth cohort, 
 #' respectively.}
-#' @author Graham Wheeler \email{graham.wheeler@@ucl.ac.uk} (University College London, UK) and
+#' @author Graham Wheeler \email{graham.wheeler@@imperial.ac.uk} (Imperial College London, UK) and
 #' 
 #' Michael Sweeting \email{michael.sweeting@@leicester.ac.uk} (University of Leicester, 
 #' UK)
@@ -112,7 +112,7 @@
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' 
 #' Chang A.,  Ganz P.,  Hayes D.,  Kinsella T.,  Pass H.,  Schiller J.,  Stone R., 
 #' Strecher V. \emph{Oncology: An Evidence-Based Approach}. Springer (2006).

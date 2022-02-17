@@ -343,7 +343,7 @@ if(getRversion() >= "2.15.1") globalVariables(c("N1", "pow", "d", "alpha", "p2",
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' 
 #' O'Quigley J.,  Pepe M.,  Fisher L. Continual reassessment method: a practical
 #' design for phase I clinical trials in cancer. \emph{Biometrics} (1990) 46:
@@ -873,7 +873,7 @@ get.dose  <-  function( dose , ncurrent, cohort) {
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @export
 plot.bcrm <- function(x, file=NULL, each=FALSE, trajectory=FALSE, ...){
   dose <- if(is.null(x$dose)) x$sdose else x$dose
@@ -1082,7 +1082,7 @@ plot.bcrm <- function(x, file=NULL, each=FALSE, trajectory=FALSE, ...){
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @export
 plot.bcrm.sim <- function(x, trajectories=FALSE, file=NULL, threep3=FALSE, ...){
   dose <- if(is.null(x[[1]]$dose)) x[[1]]$sdose else x[[1]]$dose
@@ -1228,7 +1228,7 @@ plot.bcrm.sim <- function(x, trajectories=FALSE, file=NULL, threep3=FALSE, ...){
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @export
 plot.threep3 <- function(x, file=NULL, ...){
   dose <- if(is.null(x$dose)) 1:length(x$truep) else x$dose
@@ -1325,7 +1325,7 @@ plot.threep3 <- function(x, file=NULL, ...){
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @export
 print.bcrm <- function(x, tox.cutpoints=NULL, trajectories=FALSE,
                        threep3=FALSE, ...){
@@ -1545,7 +1545,7 @@ print.bcrm.sim <- function(x, tox.cutpoints=NULL, trajectories=FALSE,
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @export
 print.threep3 <- function(x, tox.cutpoints=NULL, dose=NULL, ...){
   if(is.null(dose)){

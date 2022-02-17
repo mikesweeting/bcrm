@@ -12,13 +12,13 @@
 #' @docType package
 #' @author Michael Sweeting \email{michael.sweeting@@leicester.ac.uk}
 #' 
-#' Graham Wheeler \email{graham.wheeler@@ucl.ac.uk}
+#' Graham Wheeler \email{graham.wheeler@@imperial.ac.uk}
 #' 
-#' Maintainer: Graham Wheeler \email{graham.wheeler@@ucl.ac.uk}
+#' Maintainer: Graham Wheeler \email{graham.wheeler@@imperial.ac.uk}
 #' @references Sweeting M., Mander A., Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 NULL
 
 
@@ -71,7 +71,7 @@ NULL
 #' @references Sweeting M., Mander A., Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @examples
 #' 
 #' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.

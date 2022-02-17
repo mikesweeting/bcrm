@@ -4,16 +4,41 @@
 \alias{bcrm}
 \title{Bayesian Continual Reassessment Method for Phase I Dose-Escalation Trials}
 \usage{
-bcrm(stop = list(nmax = NULL, nmtd = NULL, precision = NULL, nmin = NULL,
-  safety = NULL), data = NULL, p.tox0 = NULL, sdose = NULL,
-  dose = NULL, ff, prior.alpha, cohort = 3, target.tox,
-  constrain = TRUE, only.below = FALSE, sdose.calculate = "mean",
-  pointest = "plugin", tox.cutpoints = NULL, loss = NULL,
-  start = NULL, simulate = FALSE, nsims = 1, truep = NULL,
-  threep3 = FALSE, threep3.start = 1, threep3.esc.only = FALSE,
-  method = "exact", burnin.itr = 2000, production.itr = 2000,
-  bugs.directory = "c:/Program Files/WinBUGS14/", plot = FALSE,
-  seed = NULL, quietly = 10, file = NULL, N, tox, notox)
+bcrm(
+  stop = list(nmax = NULL, nmtd = NULL, precision = NULL, nmin = NULL, safety = NULL),
+  data = NULL,
+  p.tox0 = NULL,
+  sdose = NULL,
+  dose = NULL,
+  ff,
+  prior.alpha,
+  cohort = 3,
+  target.tox,
+  constrain = TRUE,
+  only.below = FALSE,
+  sdose.calculate = "mean",
+  pointest = "plugin",
+  tox.cutpoints = NULL,
+  loss = NULL,
+  start = NULL,
+  simulate = FALSE,
+  nsims = 1,
+  truep = NULL,
+  threep3 = FALSE,
+  threep3.start = 1,
+  threep3.esc.only = FALSE,
+  method = "exact",
+  burnin.itr = 2000,
+  production.itr = 2000,
+  bugs.directory = "c:/Program Files/WinBUGS14/",
+  plot = FALSE,
+  seed = NULL,
+  quietly = 10,
+  file = NULL,
+  N,
+  tox,
+  notox
+)
 }
 \arguments{
 \item{stop}{A list of stopping rules for the trial. One or more of the
@@ -340,7 +365,7 @@ target.tox <- 0.30
 ## A 1-parameter power model is used,  with standardised doses calculated using 
 ## the plug-in prior median
 ## Prior for alpha is lognormal with mean 0 (on log scale) 
-## and standard deviation 1.34 (on log scale)
+## and variance 1.34^2 (on log scale)
 ## The recommended dose for the next cohort if posterior mean is used
 \dontrun{
 Power.LN.bcrm <- bcrm(stop=list(nmax=18), data=data, p.tox0=p.tox0, dose=dose
@@ -429,7 +454,7 @@ plot(TwoPLogistic.tox.intervals.2.bcrm)
 Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 of Statistical Software} (2013) 54: 1--26.
-\url{http://www.jstatsoft.org/article/view/v054i13}
+\doi{10.18637/jss.v054.i13}
 
 O'Quigley J.,  Pepe M.,  Fisher L. Continual reassessment method: a practical
 design for phase I clinical trials in cancer. \emph{Biometrics} (1990) 46:

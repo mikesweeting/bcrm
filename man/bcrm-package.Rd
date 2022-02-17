@@ -11,19 +11,19 @@ been recruited, or via simulation to assess operating characteristics.
 }
 \details{
 \tabular{ll}{ Package: \tab bcrm\cr Type: \tab Package\cr Version: \tab
-0.5.1\cr Date: \tab 2019-04-03\cr License: \tab GPL (>= 2) \cr LazyLoad:
+0.5.4\cr Date: \tab 2019-07-29\cr License: \tab GPL (>= 2) \cr LazyLoad:
 \tab yes\cr }
 }
 \references{
 Sweeting M., Mander A., Sabin T. \pkg{bcrm}: Bayesian Continual
 Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 of Statistical Software} (2013) 54: 1--26.
-\url{http://www.jstatsoft.org/article/view/v054i13}
+\doi{10.18637/jss.v054.i13}
 }
 \author{
 Michael Sweeting \email{michael.sweeting@leicester.ac.uk}
 
-Graham Wheeler \email{graham.wheeler@ucl.ac.uk}
+Graham Wheeler \email{graham.wheeler@imperial.ac.uk}
 
-Maintainer: Graham Wheeler \email{graham.wheeler@ucl.ac.uk}
+Maintainer: Graham Wheeler \email{graham.wheeler@imperial.ac.uk}
 }

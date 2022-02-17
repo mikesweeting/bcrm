@@ -4,8 +4,7 @@
 \alias{plot.bcrm.sim}
 \title{Plot the operating characteristics from the simulated trials}
 \usage{
-\method{plot}{bcrm.sim}(x, trajectories = FALSE, file = NULL,
-  threep3 = FALSE, ...)
+\method{plot}{bcrm.sim}(x, trajectories = FALSE, file = NULL, threep3 = FALSE, ...)
 }
 \arguments{
 \item{x}{An object of class "bcrm.sim",  as returned by \code{\link{bcrm}}
@@ -40,7 +39,7 @@ design are plotted alongside those of the \code{bcrm} design (see
 Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 of Statistical Software} (2013) 54: 1--26.
-\url{http://www.jstatsoft.org/article/view/v054i13}
+\doi{10.18637/jss.v054.i13}
 }
 \seealso{
 \code{\link{print.bcrm.sim}},  \code{\link{bcrm}}, 

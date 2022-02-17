@@ -216,7 +216,7 @@ which.f  <-  function( ff ) {
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @examples
 #' 
 #' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.

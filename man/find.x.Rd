@@ -69,7 +69,7 @@ hist(posterior.mtd)
 Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 of Statistical Software} (2013) 54: 1--26.
-\url{http://www.jstatsoft.org/article/view/v054i13}
+\doi{10.18637/jss.v054.i13}
 }
 \seealso{
 \code{\link{bcrm}},  \code{\link{getprior}},  \code{\link{Posterior.exact}},  \code{\link{Posterior.BRugs}},  \code{\link{Posterior.R2WinBUGS}}

@@ -5,8 +5,13 @@
 \title{Calculate all possible trial pathways for the standard 3+3 design,  together
 with their probability of occurring}
 \usage{
-threep3(truep, threep3.start = 1, threep3.esc.only = FALSE,
-  dose = NULL, quietly = FALSE)
+threep3(
+  truep,
+  threep3.start = 1,
+  threep3.esc.only = FALSE,
+  dose = NULL,
+  quietly = FALSE
+)
 }
 \arguments{
 \item{truep}{A vector of length \code{k} (the number of doses being
@@ -96,7 +101,7 @@ plot(design.threep3)
 Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 of Statistical Software} (2013) 54: 1--26.
-\url{http://www.jstatsoft.org/article/view/v054i13}
+\doi{10.18637/jss.v054.i13}
 
 Chang A.,  Ganz P.,  Hayes D.,  Kinsella T.,  Pass H.,  Schiller J.,  Stone R., 
 Strecher V. \emph{Oncology: An Evidence-Based Approach}. Springer (2006).
@@ -116,7 +121,7 @@ approach to phase I cancer trials. \emph{Statistics in Medicine} (2008) 27:
 \code{\link{threep3}}
 }
 \author{
-Graham Wheeler \email{graham.wheeler@ucl.ac.uk} (University College London, UK) and
+Graham Wheeler \email{graham.wheeler@imperial.ac.uk} (Imperial College London, UK) and
 
 Michael Sweeting \email{michael.sweeting@leicester.ac.uk} (University of Leicester, 
 UK)

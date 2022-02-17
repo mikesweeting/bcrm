@@ -6,8 +6,7 @@
 \title{Print information regarding a trial conducted using the Bayesian continuous
 reassessment method}
 \usage{
-\method{print}{bcrm}(x, tox.cutpoints = NULL, trajectories = FALSE,
-  threep3 = FALSE, ...)
+\method{print}{bcrm}(x, tox.cutpoints = NULL, trajectories = FALSE, threep3 = FALSE, ...)
 }
 \arguments{
 \item{x}{An object of class "bcrm" or "bcrm.sim" as returned by
@@ -60,7 +59,7 @@ details).
 Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 of Statistical Software} (2013) 54: 1--26.
-\url{http://www.jstatsoft.org/article/view/v054i13}
+\doi{10.18637/jss.v054.i13}
 }
 \seealso{
 \code{\link{bcrm}},  \code{\link{threep3}}

@@ -37,7 +37,7 @@
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @examples
 #' 
 #' prior.alpha <- list(1, 1, 1)
@@ -119,7 +119,7 @@ getprior  <-  function(prior.alpha,  n) {
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @examples
 #' 
 #' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.
@@ -168,7 +168,7 @@ Posterior.rjags  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
     }else if (prior.alpha[[1]]==2){
       runif(production.itr, prior.alpha[[2]], prior.alpha[[3]])
     }else if (prior.alpha[[1]]==3){
-      dlnorm(production.itr, meanlog = prior.alpha[[2]], sdlog = sqrt(prior.alpha[[3]]))
+      rlnorm(production.itr, meanlog = prior.alpha[[2]], sdlog = sqrt(prior.alpha[[3]]))
     }else if (prior.alpha[[1]]==4)  {
       if (ff == "logit2")
       exp(rmvnorm(production.itr,mean = prior.alpha[[2]], sigma = prior.alpha[[3]]))
@@ -287,7 +287,7 @@ Posterior.rjags  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @examples
 #' 
 #' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.
@@ -337,7 +337,7 @@ Posterior.BRugs  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
     }else if (prior.alpha[[1]]==2){
       runif(production.itr, prior.alpha[[2]], prior.alpha[[3]])
     }else if (prior.alpha[[1]]==3){
-      dlnorm(production.itr, meanlog = prior.alpha[[2]], sdlog = sqrt(prior.alpha[[3]]))
+      rlnorm(production.itr, meanlog = prior.alpha[[2]], sdlog = sqrt(prior.alpha[[3]]))
     }else if (prior.alpha[[1]]==4)  {
       if (ff == "logit2")
         exp(rmvnorm(production.itr,mean = prior.alpha[[2]], sigma = prior.alpha[[3]]))
@@ -454,7 +454,7 @@ Posterior.BRugs  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.itr,
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @examples
 #' 
 #' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.
@@ -503,7 +503,7 @@ Posterior.R2WinBUGS  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.
     }else if (prior.alpha[[1]]==2){
       runif(production.itr, prior.alpha[[2]], prior.alpha[[3]])
     }else if (prior.alpha[[1]]==3){
-      dlnorm(production.itr, meanlog = prior.alpha[[2]], sdlog = sqrt(prior.alpha[[3]]))
+      rlnorm(production.itr, meanlog = prior.alpha[[2]], sdlog = sqrt(prior.alpha[[3]]))
     }else if (prior.alpha[[1]]==4)  {
       if (ff == "logit2")
         exp(rmvnorm(production.itr,mean = prior.alpha[[2]], sigma = prior.alpha[[3]]))
@@ -615,7 +615,7 @@ Posterior.R2WinBUGS  <-  function(tox,  notox, sdose, ff,  prior.alpha,  burnin.
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @examples
 #' 
 #' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.
@@ -793,7 +793,7 @@ Posterior.exact <- function(tox, notox, sdose, ff, prior.alpha){
 #' @references Sweeting M.,  Mander A.,  Sabin T. \pkg{bcrm}: Bayesian Continual
 #' Reassessment Method Designs for Phase I Dose-Finding Trials. \emph{Journal
 #' of Statistical Software} (2013) 54: 1--26.
-#' \url{http://www.jstatsoft.org/article/view/v054i13}
+#' \doi{10.18637/jss.v054.i13}
 #' @examples
 #' 
 #' ## Dose-escalation cancer trial example as described in Neuenschwander et al 2008.
