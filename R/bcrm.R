@@ -482,7 +482,7 @@ bcrm <- function(stop=list(nmax=NULL, nmtd=NULL, precision=NULL,
   }
   
   # Checks of argument inputs  
-  if(missing(N) & is.null(stop$nmax) & is.null(stop$nmtd) & is.null(stop$precision))
+  if(missing(N) & is.null(stop$nmax) & is.null(stop$nmtd) & is.null(stop$precision) & is.null(stop$safety))
     stop("At least one stopping rule must be provided using the stop argument")
   if(!missing(N)){
     stop$nmax <- N
