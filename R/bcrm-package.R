@@ -5,7 +5,7 @@
 #' been recruited, or via simulation to assess operating characteristics.
 #' 
 #' \tabular{ll}{ Package: \tab bcrm\cr Type: \tab Package\cr Version: \tab
-#' 0.5.4\cr Date: \tab 2019-07-29\cr License: \tab GPL (>= 2) \cr LazyLoad:
+#' 0.5.5\cr Date: \tab 2022-05-31\cr License: \tab GPL (>= 2) \cr LazyLoad:
 #' \tab yes\cr }
 #' 
 #' @name bcrm-package

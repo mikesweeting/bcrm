@@ -47,6 +47,9 @@
 #' @import stats
 #' @import graphics
 #' @import mvtnorm
+#' @import BRugs
+#' @import R2WinBUGS
+#' @import rjags
 #' @export getprior
 getprior  <-  function(prior.alpha,  n) {
   type  <-  prior.alpha[[1]]
